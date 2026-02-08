@@ -13,7 +13,8 @@ import {
   Smartphone,
   Cpu,
   Brain,
-  Shield
+  Shield,
+  Lock
 } from 'lucide-react';
 
 const navItems = [
@@ -23,7 +24,7 @@ const navItems = [
   { icon: Package, label: 'Gestion des Stocks', id: 'inventory' },
   { icon: Cpu, label: 'Automate / Robot', id: 'automation' },
   { icon: Brain, label: 'Intelligence Artificielle', id: 'ai' },
-  { icon: Shield, label: 'Mutuelles / Tiers-Payant', id: 'mutuelles' },
+  { icon: Shield, label: 'Mutuelles / Remboursements', id: 'mutuelles' },
   { icon: FileText, label: 'Ordonnances', id: 'prescriptions' },
   { icon: Users, label: 'Patients', id: 'patients' },
   { icon: Activity, label: 'Finances / Reporting', id: 'finances' },
