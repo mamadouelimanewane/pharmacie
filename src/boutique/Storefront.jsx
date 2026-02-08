@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import {
     ShoppingBag, Search, Menu, X, Star,
     ArrowRight, Heart, Filter, MessageCircle,
-    ChevronDown, LayoutGrid, List, Plus, Minus
+    ChevronDown, LayoutGrid, List, Plus, Minus,
+    Zap, Share2, Gift, Send, Copy
 } from 'lucide-react';
-import { BOUTIQUE_PRODUCTS, BOUTIQUE_CATEGORIES } from '../data/boutiqueData';
+import { BOUTIQUE_PRODUCTS, BOUTIQUE_CATEGORIES, FLASH_SALE_CONFIG, REFERRAL_PROGRAM } from '../data/boutiqueData';
 
 export default function Storefront() {
     const [cart, setCart] = useState([]);
@@ -13,6 +14,7 @@ export default function Storefront() {
     const [searchQuery, setSearchQuery] = useState('');
     const [isAiOpen, setIsAiOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
+    const [isReferralOpen, setIsReferralOpen] = useState(false);
 
     const addToCart = (product) => {
         const existing = cart.find(item => item.id === product.id);
@@ -32,6 +34,17 @@ export default function Storefront() {
             <div style={{ backgroundColor: '#000', color: '#fff', padding: '10px 0', textAlign: 'center', fontSize: '0.8rem', fontWeight: '700', letterSpacing: '2px' }}>
                 LIVRAISON OFFERTE DÈS 50 000 F D'ACHATS • ÉCHANTILLONS OFFERTS DANS CHAQUE COMMANDE
             </div>
+            {/* --- FLASH SALE BAR --- */}
+            <div style={{ backgroundColor: '#fee2e2', color: '#ef4444', padding: '12px 5%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #fecaca' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ backgroundColor: '#ef4444', color: '#fff', padding: '4px 12px', borderRadius: '6px', fontWeight: '900', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Zap size={14} fill="white" /> FLASH SALE
+                    </div>
+                    <span style={{ fontWeight: '800', fontSize: '0.9rem' }}>Jusqu'à -25% sur les sérums éclat • <span style={{ color: '#000' }}>Fin dans : 04:59:12</span></span>
+                </div>
+                <button style={{ border: 'none', background: 'none', color: '#000', fontWeight: '900', fontSize: '0.8rem', textDecoration: 'underline', cursor: 'pointer' }}>Voir les offres</button>
+            </div>
+
             {/* --- TOP NAV --- */}
             <nav style={{ padding: '1.25rem 5%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(10px)', position: 'sticky', top: 0, zIndex: 100, borderBottom: '1px solid #f0f0f0' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '3rem' }}>
@@ -134,12 +147,40 @@ export default function Storefront() {
                                     </div>
                                 </div>
                                 <h3 style={{ fontSize: '1.1rem', fontWeight: '800' }}>{product.name}</h3>
-                                <p style={{ fontSize: '1.25rem', fontWeight: '900', marginTop: '8px' }}>{product.price.toLocaleString()} F</p>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '8px' }}>
+                                    {product.isFlash ? (
+                                        <>
+                                            <span style={{ fontSize: '1.25rem', fontWeight: '900', color: '#ef4444' }}>{product.salePrice.toLocaleString()} F</span>
+                                            <span style={{ fontSize: '0.9rem', color: '#999', textDecoration: 'line-through' }}>{product.price.toLocaleString()} F</span>
+                                        </>
+                                    ) : (
+                                        <p style={{ fontSize: '1.25rem', fontWeight: '900' }}>{product.price.toLocaleString()} F</p>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     ))}
                 </div>
             </main>
+
+            {/* --- REFERRAL SECTION --- */}
+            <section style={{ backgroundColor: '#f8fafc', padding: '5rem 5%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ maxWidth: '900px', textAlign: 'center', backgroundColor: '#fff', padding: '4rem', borderRadius: '40px', boxShadow: '0 20px 40px rgba(0,0,0,0.05)' }}>
+                    <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#dcfce7', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 2rem' }}>
+                        <Gift size={40} />
+                    </div>
+                    <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginBottom: '1rem' }}>Offrez {REFERRAL_PROGRAM.friendDiscount}, Recevez {REFERRAL_PROGRAM.rewardAmount.toLocaleString()} F</h2>
+                    <p style={{ fontSize: '1.1rem', color: '#666', marginBottom: '2.5rem', maxWidth: '600px', margin: '0 auto 2.5rem' }}>
+                        Partagez votre secret beauté avec vos amis. Pour chaque parrainage réussi, bénéficiez de réductions sur vos prochains soins.
+                    </p>
+                    <button
+                        onClick={() => setIsReferralOpen(true)}
+                        style={{ padding: '1.25rem 3rem', borderRadius: '100px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', fontWeight: '800', fontSize: '1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', margin: '0 auto' }}
+                    >
+                        Parrainer un ami <Share2 size={20} />
+                    </button>
+                </div>
+            </section>
 
             {/* --- FOOTER --- */}
             <footer style={{ backgroundColor: '#000', color: '#fff', padding: '5rem 5%', marginTop: '5rem' }}>
@@ -279,6 +320,30 @@ export default function Storefront() {
                 </div>
             )}
 
+            {/* --- REFERRAL MODAL --- */}
+            {isReferralOpen && (
+                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 2500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }} onClick={() => setIsReferralOpen(false)}>
+                    <div className="fade-in" style={{ backgroundColor: '#fff', width: '500px', borderRadius: '32px', padding: '3rem', position: 'relative' }} onClick={e => e.stopPropagation()}>
+                        <button onClick={() => setIsReferralOpen(false)} style={{ position: 'absolute', top: '20px', right: '20px', border: 'none', background: 'none', cursor: 'pointer' }}><X size={24} /></button>
+                        <h2 style={{ fontSize: '1.8rem', fontWeight: '900', textAlign: 'center', marginBottom: '1.5rem' }}>Programme Elite Privilège</h2>
+                        <p style={{ textAlign: 'center', color: '#666', marginBottom: '2rem' }}>Partagez votre lien de parrainage unique</p>
+
+                        <div style={{ backgroundColor: '#f8fafc', padding: '20px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px dashed #3b82f6', marginBottom: '2rem' }}>
+                            <code style={{ fontWeight: '800', color: '#3b82f6' }}>ELITE-REF-2026</code>
+                            <button style={{ border: 'none', background: 'none', color: '#666', cursor: 'pointer' }}><Copy size={20} /></button>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            <button style={{ width: '100%', padding: '1rem', borderRadius: '100px', backgroundColor: '#25d366', color: '#fff', border: 'none', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', cursor: 'pointer' }}>
+                                <MessageCircle size={20} /> Partager sur WhatsApp
+                            </button>
+                            <button style={{ width: '100%', padding: '1rem', borderRadius: '100px', backgroundColor: '#000', color: '#fff', border: 'none', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', cursor: 'pointer' }}>
+                                <Send size={20} /> Envoyer par Email
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             <style>{`
                 .fade-in-right { animation: fadeInRight 0.4s ease-out; }
                 @keyframes fadeInRight { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }

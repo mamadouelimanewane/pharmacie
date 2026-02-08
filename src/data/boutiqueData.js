@@ -5,6 +5,8 @@ export const BOUTIQUE_PRODUCTS = [
         brand: 'Lierac Elite',
         category: 'Cosmétiques',
         price: 45000,
+        salePrice: 35000,
+        isFlash: true,
         image: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=400',
         description: 'Un serum puissant pour illuminer le teint et réduire les signes de fatigue.',
         stock: 24,
@@ -80,3 +82,13 @@ export const BOUTIQUE_CATEGORIES = [
     { id: 'parfum', label: 'Parfums', count: 32 },
     { id: 'wellness', label: 'Bien-être', count: 140 }
 ];
+
+export const FLASH_SALE_CONFIG = {
+    endTime: new Date(Date.now() + 1000 * 60 * 60 * 5).toISOString(), // 5 hours from now
+    discountLabel: '-25%'
+};
+
+export const REFERRAL_PROGRAM = {
+    rewardAmount: 5000,
+    friendDiscount: '15%'
+};

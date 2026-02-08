@@ -174,46 +174,88 @@ export default function BoutiqueBackoffice() {
                 </div>
             )}
 
+            {activeTab === 'orders' && (
+                <div className="fade-in">
+                    <div className="card" style={{ padding: '24px' }}>
+                        <h3 style={{ fontWeight: '900', marginBottom: '20px' }}>Flux Commandes Récentes</h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            {[
+                                { id: 'W-2045', patient: 'Awa Ndiaye', total: '15 000 F', status: 'Payé', type: 'Dermato' },
+                                { id: 'W-2046', patient: 'Mamadou Kane', total: '45 000 F', status: 'Attente', type: 'Parfum' }
+                            ].map((ord, i) => (
+                                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #eee' }}>
+                                    <div>
+                                        <span style={{ fontWeight: '800', color: 'var(--primary)' }}>{ord.id}</span>
+                                        <p style={{ fontSize: '0.85rem', fontWeight: '700' }}>{ord.patient} • {ord.type}</p>
+                                    </div>
+                                    <div style={{ textAlign: 'right' }}>
+                                        <p style={{ fontWeight: '900' }}>{ord.total}</p>
+                                        <span style={{ fontSize: '0.7rem', fontWeight: '900', color: ord.status === 'Payé' ? '#10b981' : '#f59e0b' }}>{ord.status.toUpperCase()}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {activeTab === 'marketing' && (
                 <div className="fade-in">
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
                         <div className="card" style={{ padding: '24px' }}>
-                            <h3 style={{ fontWeight: '900', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}><ImageIcon size={20} /> Bannières & Visuels Hero</h3>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                {[
-                                    { title: 'Soldes Hiver - Eclat', status: 'Actif', img: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef' },
-                                    { title: 'Promo Cosmétiques 20%', status: 'Programmé', img: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be' }
-                                ].map((b, i) => (
-                                    <div key={i} style={{ display: 'flex', gap: '16px', alignItems: 'center', padding: '12px', border: '1px solid #eee', borderRadius: '16px' }}>
-                                        <img src={b.img} style={{ width: '80px', height: '50px', borderRadius: '8px', objectFit: 'cover' }} />
-                                        <div style={{ flex: 1 }}>
-                                            <p style={{ fontWeight: '800', fontSize: '0.9rem' }}>{b.title}</p>
-                                            <span style={{ fontSize: '0.7rem', fontWeight: '900', color: b.status === 'Actif' ? '#10b981' : '#3b82f6' }}>{b.status.toUpperCase()}</span>
-                                        </div>
-                                        <button className="glass" style={{ padding: '8px', borderRadius: '8px' }}><Edit2 size={14} /></button>
-                                    </div>
-                                ))}
-                                <button style={{ marginTop: '10px', padding: '12px', borderRadius: '12px', border: '2px dashed #e2e8f0', background: 'none', color: 'var(--text-muted)', fontWeight: '800', cursor: 'pointer' }}>+ Ajouter une bannière</button>
+                            <h3 style={{ fontWeight: '900', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}><Zap size={20} color="#ef4444" fill="#ef4444" /> Ventes Flash Elite</h3>
+                            <div style={{ backgroundColor: '#fef2f2', border: '1px solid #fee2e2', padding: '16px', borderRadius: '16px' }}>
+                                <p style={{ fontSize: '0.85rem', fontWeight: '800', color: '#ef4444', marginBottom: '4px' }}>CAMPAGNE ACTIVE</p>
+                                <p style={{ fontWeight: '700' }}>Sérums Éclat de Printemps</p>
+                                <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                                    <button style={{ padding: '6px 12px', borderRadius: '8px', backgroundColor: '#ef4444', color: 'white', border: 'none', fontWeight: '800', fontSize: '0.75rem' }}>Arrêter</button>
+                                </div>
                             </div>
                         </div>
 
                         <div className="card" style={{ padding: '24px' }}>
-                            <h3 style={{ fontWeight: '900', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}><Tag size={20} /> Codes Promos & Offres</h3>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <h3 style={{ fontWeight: '900', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}><Gift size={20} color="#10b981" /> Parrainages</h3>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                <div style={{ padding: '12px', backgroundColor: '#f0fdf4', borderRadius: '12px', textAlign: 'center' }}>
+                                    <p style={{ fontSize: '0.7rem', color: '#166534', fontWeight: '800' }}>PARRAINS</p>
+                                    <p style={{ fontSize: '1.5rem', fontWeight: '900' }}>54</p>
+                                </div>
+                                <div style={{ padding: '12px', backgroundColor: '#f0fdf4', borderRadius: '12px', textAlign: 'center' }}>
+                                    <p style={{ fontSize: '0.7rem', color: '#166534', fontWeight: '800' }}>VENTES</p>
+                                    <p style={{ fontSize: '1.5rem', fontWeight: '900' }}>1.2M F</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                        <div className="card" style={{ padding: '24px' }}>
+                            <h3 style={{ fontWeight: '900', marginBottom: '20px' }}>Bannières & Design</h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                 {[
-                                    { code: 'BIENVENUE10', desc: '-10% sur 1ère commande', usage: '142 utilisations' },
-                                    { code: 'LIERAC20', desc: '-20% sur gamme Lierac', usage: '56 utilisations' }
-                                ].map((c, i) => (
-                                    <div key={i} style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '16px', border: '1px solid #eee' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                            <span style={{ fontWeight: '950', color: 'var(--primary)', letterSpacing: '1px' }}>{c.code}</span>
-                                            <button style={{ border: 'none', background: 'none', color: '#ef4444' }}><Trash2 size={14} /></button>
-                                        </div>
-                                        <p style={{ fontSize: '0.85rem', fontWeight: '700' }}>{c.desc}</p>
-                                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>{c.usage}</p>
+                                    { title: 'Hero - Collection Eclat', status: 'Actif' },
+                                    { title: 'Promo - Dermato Bio', status: 'Brouillon' }
+                                ].map((b, i) => (
+                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', border: '1px solid #eee', borderRadius: '10px' }}>
+                                        <span style={{ fontWeight: '700' }}>{b.title}</span>
+                                        <span style={{ fontSize: '0.7rem', fontWeight: '900', color: b.status === 'Actif' ? '#10b981' : '#94a3b8' }}>{b.status}</span>
                                     </div>
                                 ))}
-                                <button style={{ padding: '12px', borderRadius: '12px', backgroundColor: 'var(--secondary)', color: 'white', border: 'none', fontWeight: '800', cursor: 'pointer' }}>Générer un coupon</button>
+                            </div>
+                        </div>
+
+                        <div className="card" style={{ padding: '24px' }}>
+                            <h3 style={{ fontWeight: '900', marginBottom: '20px' }}>Coupons & Réductions</h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                {[
+                                    { code: 'VIP2026', discount: '-20%' },
+                                    { code: 'SOLDE15', discount: '-15%' }
+                                ].map((c, i) => (
+                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', border: '1px solid #eee', borderRadius: '10px' }}>
+                                        <span style={{ fontWeight: '950', color: 'var(--primary)' }}>{c.code}</span>
+                                        <span style={{ fontWeight: '800' }}>{c.discount}</span>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>
