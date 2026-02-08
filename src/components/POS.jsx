@@ -6,7 +6,8 @@ import {
     Power, ChevronRight, Hash, Star, Smartphone,
     QrCode, Loader2, CheckCircle2, Barcode, Unlock,
     Mail, FileText, Download, Clock, RotateCcw, UserPlus,
-    AlertTriangle, Landmark, Shield
+    AlertTriangle, Landmark, Shield, Camera, Image as ImageIcon,
+    FileSearch, CheckCircle
 } from 'lucide-react';
 import { MOCK_PRODUCTS, MOCK_PATIENTS } from '../data/mockData';
 
@@ -81,6 +82,11 @@ export default function POS() {
     const [lastSale, setLastSale] = useState(null);
     const [salesHistory, setSalesHistory] = useState([]);
 
+    // Prescription Scan State
+    const [showScanModal, setShowScanModal] = useState(false);
+    const [isScanning, setIsScanning] = useState(false);
+    const [scannedDoc, setScannedDoc] = useState(null);
+
     // Barcode Scanner logic
     const barcodeBuffer = useRef('');
     const lastKeyTime = useRef(0);
@@ -88,7 +94,6 @@ export default function POS() {
     const total = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 
     // Tiers-Payant Logic
-    // Simulate coverage mapping
     const getCoverage = (mutuelle) => {
         if (!mutuelle) return 0;
         if (mutuelle.includes('IPM')) return 0.8;
@@ -171,6 +176,7 @@ export default function POS() {
             patientShare: patientShare,
             patient: selectedPatient ? selectedPatient.name : 'Client Anonyme',
             mutuelle: selectedPatient ? selectedPatient.mutuelle : 'Aucune',
+            prescriptionAttached: !!scannedDoc,
             date: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
             fullDate: new Date().toLocaleString(),
             paymentMethod: type === 'cash' ? 'ESPÈCES' : mobilePayment === 'wave' ? 'WAVE' : 'ORANGE MONEY',
@@ -202,6 +208,7 @@ export default function POS() {
         setLastSale(null);
         setSelectedPatient(null);
         setPhoneNumber('');
+        setScannedDoc(null);
     };
 
     const startMobilePayment = (type) => {
@@ -212,6 +219,15 @@ export default function POS() {
             setMobileStatus('pending');
             setTimeout(() => setMobileStatus('success'), 2000);
         }
+    };
+
+    const simulateScan = () => {
+        setIsScanning(true);
+        setTimeout(() => {
+            setIsScanning(false);
+            setScannedDoc({ id: 'ORD-' + Math.random().toString(36).substr(2, 9), status: 'OK' });
+            setShowScanModal(false);
+        }, 1500);
     };
 
     return (
@@ -225,6 +241,39 @@ export default function POS() {
             borderRadius: 'var(--radius-lg)',
             position: 'relative'
         }}>
+            {/* Modal Numérisation Ordonnance */}
+            {showScanModal && (
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 5000, backdropFilter: 'blur(8px)' }}>
+                    <div style={{ backgroundColor: 'white', padding: '40px', borderRadius: '32px', width: '500px', textAlign: 'center', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
+                            <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>Numérisation Ordonnance</h2>
+                            <button onClick={() => setShowScanModal(false)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}><X size={32} /></button>
+                        </div>
+
+                        <div style={{ padding: '60px 40px', border: '3px dashed #e2e8f0', borderRadius: '24px', backgroundColor: '#f8fafc', marginBottom: '24px', position: 'relative', overflow: 'hidden' }}>
+                            {isScanning ? (
+                                <div className="fade-in">
+                                    <Loader2 size={48} className="spin" color="var(--primary)" style={{ margin: '0 auto 16px' }} />
+                                    <p style={{ fontWeight: '700' }}>Lecture du document...</p>
+                                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '4px', backgroundColor: 'var(--primary)', animation: 'scanMove 1.5s infinite' }}></div>
+                                </div>
+                            ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+                                    <Camera size={64} color="#94a3b8" />
+                                    <p style={{ color: 'var(--text-muted)', fontWeight: '600' }}>Placez l'ordonnance sous la caméra ou scannez le document.</p>
+                                    <button onClick={simulateScan} style={{ padding: '16px 32px', borderRadius: '16px', border: 'none', backgroundColor: 'var(--primary)', color: 'white', fontWeight: '800', cursor: 'pointer', fontSize: '1.1rem', boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.3)' }}>Lancer le Scan</button>
+                                </div>
+                            )}
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '12px' }}>
+                            <button style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white', fontWeight: '700' }}><ImageIcon size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} /> Parcourir</button>
+                            <button style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white', fontWeight: '700' }}><QrCode size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} /> e-Ordonnance</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Modal Sélection Patient */}
             {showPatientSelect && (
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 4000, backdropFilter: 'blur(4px)' }}>
@@ -280,9 +329,15 @@ export default function POS() {
                                 <span style={{ color: 'var(--text-muted)' }}>Patient</span>
                                 <span style={{ fontWeight: '700' }}>{lastSale.patient}</span>
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', fontSize: '0.9rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.9rem' }}>
                                 <span style={{ color: 'var(--text-muted)' }}>Mode</span>
                                 <span style={{ fontWeight: '700' }}>{lastSale.paymentMethod}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', fontSize: '0.9rem' }}>
+                                <span style={{ color: 'var(--text-muted)' }}>Ordonnance</span>
+                                <span style={{ fontWeight: '700', color: lastSale.prescriptionAttached ? 'var(--primary)' : 'var(--error)' }}>
+                                    {lastSale.prescriptionAttached ? 'Archivée ✅' : 'Non numérisée'}
+                                </span>
                             </div>
 
                             <div style={{ borderTop: '1px dashed #cbd5e1', paddingTop: '16px', display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -307,7 +362,6 @@ export default function POS() {
                             <button onClick={() => { alert('Impression...'); resetPOS(); }} style={{ padding: '16px', borderRadius: '14px', border: '2px solid var(--primary)', background: 'white', color: 'var(--primary)', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}><Printer size={20} /> IMPRIMER</button>
                             <button onClick={() => { alert('Email envoyé !'); resetPOS(); }} style={{ padding: '16px', borderRadius: '14px', background: 'var(--primary)', color: 'white', border: 'none', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}><Mail size={20} /> E-MAIL</button>
                         </div>
-                        <button onClick={resetPOS} style={{ width: '100%', marginTop: '16px', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontWeight: '600' }}>Passer sans ticket</button>
                     </div>
                 </div>
             )}
@@ -378,7 +432,9 @@ export default function POS() {
                             <h2 style={{ fontSize: '1.4rem', fontWeight: '900' }}>Caisse N1</h2>
                             <p style={{ fontSize: '0.8rem', opacity: 0.7, fontWeight: '600' }}>Dr. Wane • Officine</p>
                         </div>
-                        <button onClick={() => setShowHistory(true)} style={{ padding: '12px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'rgba(255,255,255,0.1)', color: 'white', cursor: 'pointer' }}><History size={24} /></button>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            <button onClick={() => setShowHistory(true)} style={{ padding: '12px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'rgba(255,255,255,0.1)', color: 'white', cursor: 'pointer' }}><History size={24} /></button>
+                        </div>
                     </div>
 
                     {/* Patient / Mutuelle Bar */}
@@ -388,7 +444,7 @@ export default function POS() {
                             width: '100%', padding: '14px', borderRadius: '16px', border: 'none',
                             backgroundColor: selectedPatient ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255,255,255,0.1)',
                             color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px',
-                            transition: 'all 0.2s'
+                            transition: 'all 0.2s', marginBottom: '12px'
                         }}
                     >
                         {selectedPatient ? <ShieldCheck size={22} color="var(--primary)" /> : <UserPlus size={22} />}
@@ -400,28 +456,38 @@ export default function POS() {
                         </div>
                         {selectedPatient && <X size={18} style={{ opacity: 0.6 }} onClick={(e) => { e.stopPropagation(); setSelectedPatient(null); }} />}
                     </button>
+
+                    {/* Prescription Scanner Button */}
+                    <button
+                        onClick={() => setShowScanModal(true)}
+                        style={{
+                            width: '100%', padding: '12px', borderRadius: '16px', border: scannedDoc ? 'none' : '2px dashed rgba(255,255,255,0.3)',
+                            backgroundColor: scannedDoc ? 'var(--primary)' : 'rgba(0,0,0,0.1)',
+                            color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px',
+                            transition: 'all 0.2s'
+                        }}
+                    >
+                        {scannedDoc ? <CheckCircle size={22} /> : <FileSearch size={22} />}
+                        <span style={{ fontSize: '0.85rem', fontWeight: '700' }}>
+                            {scannedDoc ? 'Ordonnance numérisée' : 'Numériser l\'Ordonnance'}
+                        </span>
+                        {scannedDoc && <X size={16} style={{ marginLeft: 'auto', opacity: 0.6 }} onClick={(e) => { e.stopPropagation(); setScannedDoc(null); }} />}
+                    </button>
                 </div>
 
                 <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
-                    {cart.length === 0 ? (
-                        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: 0.2 }}>
-                            <ShoppingCart size={64} style={{ marginBottom: '16px' }} />
-                            <p style={{ fontWeight: '700' }}>Panier Vide</p>
-                        </div>
-                    ) : (
-                        cart.map(item => (
-                            <div key={item.id} style={{ display: 'flex', padding: '16px', borderBottom: '1px solid #f8fafc', alignItems: 'center' }}>
-                                <div style={{ flex: 1 }}>
-                                    <p style={{ fontWeight: '800', fontSize: '0.95rem', color: 'var(--secondary)' }}>{item.name}</p>
-                                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>{item.price.toLocaleString()} F x {item.quantity}</p>
-                                </div>
-                                <div style={{ textAlign: 'right' }}>
-                                    <p style={{ fontWeight: '900', color: 'var(--secondary)' }}>{(item.price * item.quantity).toLocaleString()} F</p>
-                                    <button onClick={() => setCart(prev => prev.filter(i => i.id !== item.id))} style={{ border: 'none', background: 'none', color: '#cbd5e1', cursor: 'pointer', marginTop: '4px' }}><Trash2 size={16} /></button>
-                                </div>
+                    {cart.map(item => (
+                        <div key={item.id} style={{ display: 'flex', padding: '16px', borderBottom: '1px solid #f8fafc', alignItems: 'center' }}>
+                            <div style={{ flex: 1 }}>
+                                <p style={{ fontWeight: '800', fontSize: '0.95rem', color: 'var(--secondary)' }}>{item.name}</p>
+                                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>{item.price.toLocaleString()} F x {item.quantity}</p>
                             </div>
-                        ))
-                    )}
+                            <div style={{ textAlign: 'right' }}>
+                                <p style={{ fontWeight: '900', color: 'var(--secondary)' }}>{(item.price * item.quantity).toLocaleString()} F</p>
+                                <button onClick={() => setCart(prev => prev.filter(i => i.id !== item.id))} style={{ border: 'none', background: 'none', color: '#cbd5e1', cursor: 'pointer', marginTop: '4px' }}><Trash2 size={16} /></button>
+                            </div>
+                        </div>
+                    ))}
                 </div>
 
                 {/* Zone de Calcul Tiers-Payant */}
@@ -438,9 +504,9 @@ export default function POS() {
                             </div>
                         )}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingTop: '8px' }}>
-                            <span style={{ fontSize: '1.2rem', fontWeight: '900', color: 'var(--secondary)' }}>{insuranceShare > 0 ? 'NET À PAYER' : 'TOTAL'}</span>
+                            <span style={{ fontSize: '1.2rem', fontWeight: '900', color: 'var(--secondary)' }}>NET À PAYER PATIENT</span>
                             <span style={{ fontSize: '2.2rem', fontWeight: '950', color: 'var(--primary)', lineHeight: 1 }}>
-                                {(insuranceShare > 0 ? patientShare : total).toLocaleString()} <span style={{ fontSize: '1rem' }}>F</span>
+                                {patientShare.toLocaleString()} <span style={{ fontSize: '1rem' }}>F</span>
                             </span>
                         </div>
                     </div>
@@ -472,32 +538,20 @@ export default function POS() {
                                     <span style={{ color: 'var(--text-muted)', fontWeight: '700' }}>Reçu</span>
                                     <span style={{ fontSize: '1.4rem', fontWeight: '900', color: 'var(--primary)' }}>{cashAmount || '0'} F</span>
                                 </div>
-                                {parseInt(cashAmount) >= (insuranceShare > 0 ? patientShare : total) && (
+                                {parseInt(cashAmount) >= patientShare && (
                                     <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--success)', fontWeight: '900', borderTop: '1px solid #e2e8f0', paddingTop: '8px' }}>
                                         <span>Rendu monnaie</span>
-                                        <span style={{ fontSize: '1.2rem' }}>{(parseInt(cashAmount) - (insuranceShare > 0 ? patientShare : total)).toLocaleString()} F</span>
+                                        <span style={{ fontSize: '1.2rem' }}>{(parseInt(cashAmount) - patientShare).toLocaleString()} F</span>
                                     </div>
                                 )}
                             </div>
                         )}
 
-                        {mobilePayment === 'om' && mobileStatus === 'idle' && (
-                            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-                                <OMIcon />
-                                <p style={{ fontSize: '1.4rem', fontWeight: '950', color: '#FF6600', letterSpacing: '2px', margin: '12px 0' }}>{phoneNumber || '00 000 00 00'}</p>
-                            </div>
-                        )}
-
-                        {mobileStatus === 'pending' && (
-                            <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                                <Loader2 size={48} className="spin" color="var(--primary)" style={{ margin: '0 auto 16px' }} />
-                                <p style={{ fontWeight: '800' }}>Attente confirmation mobile...</p>
-                            </div>
-                        )}
+                        {mobileStatus === 'pending' && <p style={{ textAlign: 'center', fontWeight: '700' }}>En attente mobile...</p>}
 
                         {(showCheckout || (mobilePayment === 'om' && mobileStatus === 'idle')) && <Numpad onInput={handleNumpadInput} onDelete={() => showCheckout ? setCashAmount(prev => prev.slice(0, -1)) : setPhoneNumber(prev => prev.slice(0, -1))} onClear={() => showCheckout ? setCashAmount('') : setPhoneNumber('')} />}
 
-                        {((showCheckout && parseInt(cashAmount) >= (insuranceShare > 0 ? patientShare : total)) || mobileStatus === 'success') && (
+                        {((showCheckout && parseInt(cashAmount) >= patientShare) || mobileStatus === 'success') && (
                             <button
                                 onClick={() => finalizePayment(showCheckout ? 'cash' : 'mobile')}
                                 style={{ width: '100%', padding: '20px', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '18px', fontWeight: '900', fontSize: '1.1rem', marginTop: '20px', cursor: 'pointer', boxShadow: '0 4px 6px rgba(16, 185, 129, 0.4)' }}
@@ -508,6 +562,14 @@ export default function POS() {
                     </div>
                 )}
             </div>
+
+            <style>{`
+                @keyframes scanMove {
+                    0% { top: 0; }
+                    50% { top: 100%; }
+                    100% { top: 0; }
+                }
+            `}</style>
         </div>
     );
 }
