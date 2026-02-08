@@ -40,8 +40,9 @@ export default function Inventory() {
     ]);
 
     const [healthAlerts, setHealthAlerts] = useState([
-        { id: 1, type: 'Recall', product: 'Zovirax 200mg', lot: 'LT99281', level: 'Critical', date: '08/02/2026', source: 'ANSM', status: 'Pending' }
+        { id: 1, type: 'Recall', product: 'Zovirax 200mg', lot: 'LT99281', level: 'Critical', date: '08/02/2026', source: 'ANSM', status: 'Pending', affectedPatients: 3 }
     ]);
+    const [selectedAlertForPatients, setSelectedAlertForPatients] = useState(null);
 
     const handleRelease = (id) => {
         setReservedList(prev => prev.filter(r => r.id !== id));
@@ -577,7 +578,12 @@ export default function Inventory() {
                                         <td style={{ fontSize: '0.8rem', fontWeight: '700' }}>{alert.source}</td>
                                         <td>
                                             <div style={{ display: 'flex', gap: '8px' }}>
-                                                <button style={{ padding: '6px 12px', borderRadius: '8px', border: 'none', backgroundColor: '#ef4444', color: 'white', fontSize: '0.7rem', fontWeight: '800', cursor: 'pointer' }}>BLOQUER STOCK</button>
+                                                <button
+                                                    onClick={() => setSelectedAlertForPatients(alert)}
+                                                    style={{ padding: '6px 12px', borderRadius: '8px', border: 'none', backgroundColor: '#ef4444', color: 'white', fontSize: '0.7rem', fontWeight: '800', cursor: 'pointer' }}
+                                                >
+                                                    {alert.affectedPatients} PATIENTS À CONTACTER
+                                                </button>
                                                 <button style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: '0.7rem', fontWeight: '800', cursor: 'pointer' }}>IGNORER</button>
                                             </div>
                                         </td>
@@ -620,6 +626,58 @@ export default function Inventory() {
                             <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.8rem', cursor: 'pointer', marginTop: '10px' }}>
                                 <input type="checkbox" defaultChecked /> Alerter le préparateur au scan
                             </label>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Patient Recall Modal */}
+            {selectedAlertForPatients && (
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.9)', zIndex: 6000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)' }}>
+                    <div style={{ backgroundColor: 'white', padding: '40px', borderRadius: '32px', width: '700px', maxWidth: '90vw' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '32px' }}>
+                            <div>
+                                <h2 style={{ fontSize: '1.8rem', fontWeight: '900', color: '#991b1b', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <Users size={28} /> Rappel Patients : {selectedAlertForPatients.product}
+                                </h2>
+                                <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>Lot {selectedAlertForPatients.lot} • Source {selectedAlertForPatients.source}</p>
+                            </div>
+                            <button onClick={() => setSelectedAlertForPatients(null)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={24} /></button>
+                        </div>
+
+                        <div style={{ backgroundColor: '#fff7ed', border: '1px solid #ffedd5', padding: '20px', borderRadius: '20px', marginBottom: '32px', display: 'flex', gap: '16px', alignItems: 'start' }}>
+                            <AlertTriangle color="#f59e0b" size={24} />
+                            <p style={{ fontSize: '0.85rem', color: '#9a3412', lineHeight: '1.5' }}>
+                                ⚠️ <strong>Action Requise :</strong> Ces patients ont reçu ce lot durant les 30 derniers jours. Vous devez les informer immédiatement de ne pas consommer le produit et de le rapporter à l'officine.
+                            </p>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            {[
+                                { name: 'Mme Fatou Sow', phone: '77 450 11 22', date: '02/02/2026', qty: 2 },
+                                { name: 'M. Amadou Diallo', phone: '76 300 44 55', date: '28/01/2026', qty: 1 },
+                                { name: 'Mme Khady Ndiaye', phone: '78 123 77 88', date: '15/01/2026', qty: 1 }
+                            ].map((patient, idx) => (
+                                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderRadius: '16px', border: '1px solid #f1f5f9', background: '#f8fafc' }}>
+                                    <div>
+                                        <div style={{ fontWeight: '800', fontSize: '1rem' }}>{patient.name}</div>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>Délivré le {patient.date} • {patient.qty} boîte(s)</div>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '12px' }}>
+                                        <button className="glass" style={{ padding: '10px 16px', borderRadius: '100px', border: '1px solid #e2e8f0', color: 'var(--secondary)', fontWeight: '800', fontSize: '0.7rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <MessageCircle size={14} /> SMS
+                                        </button>
+                                        <button style={{ padding: '10px 16px', borderRadius: '100px', border: 'none', background: 'var(--primary)', color: 'white', fontWeight: '800', fontSize: '0.7rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <Smartphone size={14} /> APPELER
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div style={{ marginTop: '32px', display: 'flex', justifyContent: 'flex-end', gap: '16px' }}>
+                            <button onClick={() => setSelectedAlertForPatients(null)} className="glass" style={{ padding: '14px 28px', borderRadius: '14px', border: '1px solid #e2e8f0', color: 'var(--secondary)', fontWeight: '800', cursor: 'pointer' }}>FERMER</button>
+                            <button onClick={() => { alert("Protocole de rappel général activé."); setSelectedAlertForPatients(null); }} style={{ padding: '14px 28px', borderRadius: '14px', border: 'none', background: '#991b1b', color: 'white', fontWeight: '900', cursor: 'pointer', boxShadow: '0 10px 15px -3px rgba(153, 27, 27, 0.4)' }}>DÉCLARER RAPPEL EFFECTUÉ</button>
                         </div>
                     </div>
                 </div>
