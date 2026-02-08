@@ -62,7 +62,7 @@ export default function POS() {
     const [cashAmount, setCashAmount] = useState('');
     const [showCheckout, setShowCheckout] = useState(false);
     const [mobilePayment, setMobilePayment] = useState(null);
-    const [mobileStatus, setMobileStatus] = useState('idle');
+    const [mobileStatus, setMobileStatus] = useState('idle'); // 'idle', 'pending', 'waiting_pin', 'success'
     const [phoneNumber, setPhoneNumber] = useState('');
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [autoDrawer, setAutoDrawer] = useState(true);
@@ -240,11 +240,25 @@ export default function POS() {
     const startMobilePayment = (type) => {
         if (cart.length === 0) return;
         setMobilePayment(type);
-        if (type === 'om') setShowNumpad(true);
-        else {
-            setMobileStatus('pending');
-            setTimeout(() => setMobileStatus('success'), 2000);
+        setMobileStatus('pending');
+
+        if (type === 'wave') {
+            // Wave flow: Show QR directly
+            setTimeout(() => setMobileStatus('success'), 3500);
+        } else {
+            // OM flow: Show Numpad for phone
+            setShowNumpad(true);
         }
+    };
+
+    const confirmOMPayment = () => {
+        if (phoneNumber.length < 9) return;
+        setMobileStatus('waiting_pin');
+        setShowNumpad(false);
+        // Simulate USSD Push interaction
+        setTimeout(() => {
+            setMobileStatus('success');
+        }, 4000);
     };
 
     const simulateScan = () => {
@@ -476,9 +490,63 @@ export default function POS() {
                 {(showNumpad || showCheckout || mobilePayment) && (
                     <div style={{ position: 'absolute', bottom: '24px', right: '480px', width: '350px', backgroundColor: 'white', borderRadius: '32px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.3)', padding: '28px', zIndex: 100, border: '1px solid var(--border)', animation: 'fadeIn 0.2s' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}><h3 style={{ fontWeight: '900', color: 'var(--secondary)', fontSize: '1.2rem' }}>Validation</h3><button onClick={() => { setShowNumpad(false); setShowCheckout(false); setMobilePayment(null); setMobileStatus('idle'); setCashAmount(''); }} style={{ border: 'none', background: 'none', cursor: 'pointer' }}><X size={28} /></button></div>
-                        {showCheckout && (<div style={{ marginBottom: '24px', background: '#f8fafc', padding: '16px', borderRadius: '16px' }}><div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}><span style={{ color: 'var(--text-muted)', fontWeight: '700' }}>Reçu</span><span style={{ fontSize: '1.4rem', fontWeight: '900', color: 'var(--primary)' }}>{cashAmount || '0'} F</span></div>{parseInt(cashAmount) >= patientShare && (<div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--success)', fontWeight: '900', borderTop: '1px solid #e2e8f0', paddingTop: '8px' }}><span>Rendu monnaie</span><span style={{ fontSize: '1.2rem' }}>{(parseInt(cashAmount) - patientShare).toLocaleString()} F</span></div>)}</div>)}
-                        {(showCheckout || (mobilePayment === 'om' && mobileStatus === 'idle')) && <Numpad onInput={handleNumpadInput} onDelete={() => showCheckout ? setCashAmount(prev => prev.slice(0, -1)) : setPhoneNumber(prev => prev.slice(0, -1))} onClear={() => showCheckout ? setCashAmount('') : setPhoneNumber('')} />}
-                        {((showCheckout && parseInt(cashAmount) >= patientShare) || mobileStatus === 'success') && (<button onClick={() => finalizePayment(showCheckout ? 'cash' : 'mobile')} style={{ width: '100%', padding: '20px', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '18px', fontWeight: '900', fontSize: '1.1rem', marginTop: '20px', cursor: 'pointer', boxShadow: '0 4px 6px rgba(16, 185, 129, 0.4)' }}>FINALISER LA VENTE</button>)}
+                        {/* Mobile Money Specific UI */}
+                        {mobilePayment === 'wave' && mobileStatus !== 'success' && (
+                            <div className="fade-in" style={{ textAlign: 'center', padding: '20px 0' }}>
+                                <div style={{ background: 'white', padding: '15px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'inline-block', marginBottom: '16px' }}>
+                                    <QrCode size={180} color="#1dcad3" />
+                                </div>
+                                <p style={{ fontWeight: '800', color: 'var(--secondary)', marginBottom: '4px' }}>Scannez pour payer avec Wave</p>
+                                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{patientShare.toLocaleString()} F</p>
+                                <div style={{ marginTop: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#1dcad3' }}>
+                                    <Loader2 size={20} className="spin" />
+                                    <span style={{ fontWeight: '700', fontSize: '0.9rem' }}>Attente de confirmation...</span>
+                                </div>
+                            </div>
+                        )}
+
+                        {mobilePayment === 'om' && mobileStatus === 'pending' && (
+                            <div className="fade-in" style={{ marginBottom: '20px' }}>
+                                <p style={{ fontWeight: '800', marginBottom: '12px' }}>Entrez le numéro Orange Money</p>
+                                <div style={{ padding: '16px', background: '#f8fafc', borderRadius: '14px', fontSize: '1.5rem', fontWeight: '900', border: '1px solid #FF6600', color: '#FF6600', textAlign: 'center', marginBottom: '16px' }}>
+                                    {phoneNumber || '7x xxx xx xx'}
+                                </div>
+                                <Numpad onInput={handleNumpadInput} onDelete={() => setPhoneNumber(prev => prev.slice(0, -1))} onClear={() => setPhoneNumber('')} />
+                                <button onClick={confirmOMPayment} disabled={phoneNumber.length < 9} style={{ width: '100%', padding: '18px', background: '#FF6600', color: 'white', border: 'none', borderRadius: '16px', fontWeight: '900', marginTop: '20px', cursor: 'pointer' }}>INITIER LE PAIEMENT</button>
+                            </div>
+                        )}
+
+                        {mobilePayment === 'om' && mobileStatus === 'waiting_pin' && (
+                            <div className="fade-in" style={{ textAlign: 'center', padding: '30px 0' }}>
+                                <div style={{ width: 64, height: 64, backgroundColor: 'rgba(255, 102, 0, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+                                    <Smartphone size={32} color="#FF6600" />
+                                </div>
+                                <h3 style={{ fontWeight: '900', marginBottom: '8px' }}>Push SMS envoyé</h3>
+                                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>Le client doit saisir son **code secret** sur son mobile **{phoneNumber}**.</p>
+                                <div style={{ marginTop: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#FF6600' }}>
+                                    <Loader2 size={18} className="spin" />
+                                    <span style={{ fontWeight: '700', fontSize: '0.85rem' }}>Attente du PIN...</span>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Completion / Final Button */}
+                        {((showCheckout && parseInt(cashAmount) >= patientShare) || mobileStatus === 'success') && (
+                            <div className="fade-in">
+                                {mobileStatus === 'success' && (
+                                    <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                                        <div style={{ width: 50, height: 50, backgroundColor: '#dcfce7', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                                            <CheckCircle2 size={30} color="#10b981" />
+                                        </div>
+                                        <p style={{ fontWeight: '900', color: '#10b981' }}>PAIEMENT CONFIRMÉ</p>
+                                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Référence: {Math.random().toString(36).substr(2, 9).toUpperCase()}</p>
+                                    </div>
+                                )}
+                                <button onClick={() => finalizePayment(showCheckout ? 'cash' : 'mobile')} style={{ width: '100%', padding: '20px', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '18px', fontWeight: '900', fontSize: '1.1rem', marginTop: '10px', cursor: 'pointer', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)' }}>
+                                    {mobileStatus === 'success' ? 'VALIDER & IMPRIMER TICKET' : 'FINALISER LA VENTE'}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

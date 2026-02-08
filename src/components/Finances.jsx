@@ -9,9 +9,11 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { MOCK_PRODUCTS } from '../data/mockData';
 
 const paymentData = [
-    { name: 'Tiers-Payant (AMO)', value: 4500, color: '#059669' },
-    { name: 'Complémentaires (AMC)', value: 2100, color: '#06b6d4' },
-    { name: 'Part Patient', value: 1200, color: '#6366f1' },
+    { name: 'Espèces (Cash)', value: 5200, color: '#10b981' },
+    { name: 'Tiers-Payant (AMO)', value: 4500, color: '#3b82f6' },
+    { name: 'Wave Mobile', value: 2800, color: '#1dcad3' },
+    { name: 'Orange Money', value: 1900, color: '#FF6600' },
+    { name: 'Complémentaires (AMC)', value: 800, color: '#8b5cf6' },
 ];
 
 const marginTrendData = [
