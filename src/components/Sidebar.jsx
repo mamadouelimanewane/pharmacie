@@ -29,6 +29,7 @@ const navItems = [
   { icon: Activity, label: 'Finances / Reporting', id: 'finances' },
   { icon: Users, label: 'Planning / RH', id: 'staff' },
   { icon: Smartphone, label: 'Portail Manager (Mobile)', id: 'manager-portal' },
+  { icon: Lock, label: 'Sécurité & Sauvegardes', id: 'security' },
   { icon: Settings, label: 'Paramètres', id: 'settings' },
 ];
 

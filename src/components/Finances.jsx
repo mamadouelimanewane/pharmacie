@@ -14,6 +14,7 @@ const paymentData = [
     { name: 'Wave Mobile', value: 2800, color: '#1dcad3' },
     { name: 'Orange Money', value: 1900, color: '#FF6600' },
     { name: 'Complémentaires (AMC)', value: 800, color: '#8b5cf6' },
+    { name: 'Frais Opérateurs (1%)', value: 47, color: '#ef4444' },
 ];
 
 const marginTrendData = [

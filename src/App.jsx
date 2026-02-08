@@ -13,6 +13,7 @@ import Automation from './components/Automation';
 import AIAssistant from './components/AIAssistant';
 import Mutuelles from './components/Mutuelles';
 import ManagerPortal from './components/ManagerPortal';
+import Security from './components/Security';
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -45,6 +46,8 @@ function App() {
         return <Configuration />;
       case 'manager-portal':
         return <ManagerPortal />;
+      case 'security':
+        return <Security />;
       default:
         return <Dashboard />;
     }

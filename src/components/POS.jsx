@@ -193,12 +193,17 @@ export default function POS() {
     }, []);
 
     const finalizePayment = (type) => {
+        const feeRate = mobilePayment === 'wave' ? 0.01 : mobilePayment === 'om' ? 0.01 : 0;
+        const transactionFee = Math.round(patientShare * feeRate);
+
         const saleData = {
             id: 'TK-' + Math.floor(Math.random() * 9999),
             items: [...cart],
             total: total,
             insuranceShare: insuranceShare,
             patientShare: patientShare,
+            transactionFee: transactionFee,
+            netPatientPayment: patientShare - transactionFee,
             patient: selectedPatient ? selectedPatient.name : 'Client Anonyme',
             mutuelle: selectedPatient ? selectedPatient.mutuelle : 'Aucune',
             prescriptionAttached: !!scannedDoc,
