@@ -30,6 +30,7 @@ export default function Security() {
     const [show2FAModal, setShow2FAModal] = useState(false);
     const [panicMode, setPanicMode] = useState(false);
     const [showPanicConfirm, setShowPanicConfirm] = useState(false);
+    const [sneakyMode, setSneakyMode] = useState(false);
 
     const runBackup = (type) => {
         setIsBackingUp(true);
@@ -294,6 +295,32 @@ export default function Security() {
                         <button style={{ width: '100%', padding: '12px', borderRadius: '12px', border: 'none', background: 'var(--primary)', color: 'white', fontWeight: '800', marginTop: '10px', cursor: 'pointer' }}>Générer Rapport Conformité</button>
                     </div>
 
+                    <div className="card" style={{ backgroundColor: '#fdf2f2', border: '1px solid #fecaca' }}>
+                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                <Ghost size={24} color="#ef4444" />
+                                <div>
+                                    <h4 style={{ fontWeight: '900', color: '#991b1b', fontSize: '0.9rem' }}>Mode Discret (Sneaky)</h4>
+                                    <p style={{ fontSize: '0.7rem', color: '#b91c1c', marginTop: '2px' }}>Masquer le lockdown en "Maintenance".</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setSneakyMode(!sneakyMode)}
+                                style={{
+                                    width: '40px', height: '20px', borderRadius: '20px',
+                                    backgroundColor: sneakyMode ? '#ef4444' : '#cbd5e1',
+                                    border: 'none', position: 'relative', cursor: 'pointer'
+                                }}
+                            >
+                                <div style={{
+                                    width: '14px', height: '14px', borderRadius: '50%', background: 'white',
+                                    position: 'absolute', top: '3px', left: sneakyMode ? '23px' : '3px',
+                                    transition: 'all 0.2s'
+                                }}></div>
+                            </button>
+                        </div>
+                    </div>
+
                     <div className="card" style={{ backgroundColor: '#fff7ed', border: '1px solid #ffd6a5' }}>
                         <div style={{ display: 'flex', gap: '12px' }}>
                             <ShieldAlert size={24} color="#f59e0b" />
@@ -321,7 +348,9 @@ export default function Security() {
                         </div>
                         <h2 style={{ fontSize: '1.8rem', fontWeight: '900', color: '#991b1b', marginBottom: '12px' }}>VERROUILLAGE D'URGENCE</h2>
                         <p style={{ color: 'var(--text-muted)', marginBottom: '32px', lineHeight: '1.5' }}>
-                            Cette action va **déconnecter instantanément** tous les utilisateurs (sauf vous) et **bloquer tout nouvel accès** jusqu'à levée manuelle.
+                            {sneakyMode
+                                ? "Le système sera verrouillé sous couvert d'un message de 'Maintenance Technique'. Les sessions seront révoquées silencieusement."
+                                : "Cette action va **déconnecter instantanément** tous les utilisateurs (sauf vous) et **bloquer tout nouvel accès** jusqu'à levée manuelle."}
                         </p>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                             <button onClick={() => setShowPanicConfirm(false)} style={{ padding: '16px', borderRadius: '16px', border: '1px solid #e2e8f0', background: 'white', fontWeight: '800', cursor: 'pointer' }}>Annuler</button>
