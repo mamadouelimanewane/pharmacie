@@ -11,6 +11,7 @@ import Configuration from './components/Configuration';
 import ClickAndCollect from './components/ClickAndCollect';
 import Automation from './components/Automation';
 import AIAssistant from './components/AIAssistant';
+import Mutuelles from './components/Mutuelles';
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -29,6 +30,8 @@ function App() {
         return <Automation />;
       case 'ai':
         return <AIAssistant />;
+      case 'mutuelles':
+        return <Mutuelles />;
       case 'prescriptions':
         return <Prescriptions />;
       case 'patients':

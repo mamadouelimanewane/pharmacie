@@ -12,7 +12,8 @@ import {
   UserCircle,
   Smartphone,
   Cpu,
-  Brain
+  Brain,
+  Shield
 } from 'lucide-react';
 
 const navItems = [
@@ -22,9 +23,10 @@ const navItems = [
   { icon: Package, label: 'Gestion des Stocks', id: 'inventory' },
   { icon: Cpu, label: 'Automate / Robot', id: 'automation' },
   { icon: Brain, label: 'Intelligence Artificielle', id: 'ai' },
+  { icon: Shield, label: 'Mutuelles / Tiers-Payant', id: 'mutuelles' },
   { icon: FileText, label: 'Ordonnances', id: 'prescriptions' },
   { icon: Users, label: 'Patients', id: 'patients' },
-  { icon: Activity, label: 'Finances / Tiers-Payant', id: 'finances' },
+  { icon: Activity, label: 'Finances / Reporting', id: 'finances' },
   { icon: Users, label: 'Planning / RH', id: 'staff' },
   { icon: Settings, label: 'Paramètres', id: 'settings' },
 ];
