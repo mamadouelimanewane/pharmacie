@@ -6,7 +6,7 @@ import {
     AlertCircle, CheckCircle, ArrowRight, Smartphone,
     QrCode, Loader2, Camera, Image as ImageIcon,
     Bell, MessageCircle, Send, User, BellRing, Bookmark,
-    BookmarkCheck, History, Clock
+    BookmarkCheck, History, Clock, ShieldCheck, ShieldAlert
 } from 'lucide-react';
 import { MOCK_PRODUCTS } from '../data/mockData';
 
@@ -14,7 +14,7 @@ export default function Inventory() {
     const [searchTerm, setSearchTerm] = useState('');
     const [showOrderModal, setShowOrderModal] = useState(false);
     const [showReceiveModal, setShowReceiveModal] = useState(false);
-    const [activeView, setActiveView] = useState('logistic'); // 'logistic', 'physical', 'returns', 'destruction'
+    const [activeView, setActiveView] = useState('logistic'); // 'logistic', 'physical', 'returns', 'destruction', 'alerts'
     const [physicalInventory, setPhysicalInventory] = useState({});
     const [inventoryLog, setInventoryLog] = useState([]);
     const [isReconciling, setIsReconciling] = useState(false);
@@ -37,6 +37,10 @@ export default function Inventory() {
     // Mock Waitlist
     const [waitlist, setWaitlist] = useState([
         { id: 1, patient: 'Awa Ndiaye', phone: '78 555 66 77', product: 'Amoxicilline 1g', date: '08/02', status: 'pending' }
+    ]);
+
+    const [healthAlerts, setHealthAlerts] = useState([
+        { id: 1, type: 'Recall', product: 'Zovirax 200mg', lot: 'LT99281', level: 'Critical', date: '08/02/2026', source: 'ANSM', status: 'Pending' }
     ]);
 
     const handleRelease = (id) => {
@@ -116,7 +120,7 @@ export default function Inventory() {
             <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                 <div>
                     <h1 style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--secondary)' }}>
-                        {activeView === 'logistic' ? 'Gestion Logistique' : activeView === 'physical' ? 'Inventaire Physique' : activeView === 'returns' ? 'Retours Fournisseurs' : 'Destruction Sécurisée'}
+                        {activeView === 'logistic' ? 'Gestion Logistique' : activeView === 'physical' ? 'Inventaire Physique' : activeView === 'returns' ? 'Retours Fournisseurs' : activeView === 'destruction' ? 'Destruction Sécurisée' : 'Centre d\'Alertes Sanitaires'}
                     </h1>
                     <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
                         <button
@@ -142,6 +146,13 @@ export default function Inventory() {
                             style={{ background: 'none', border: 'none', color: activeView === 'destruction' ? 'var(--primary)' : 'var(--text-muted)', fontWeight: '800', cursor: 'pointer', borderBottom: activeView === 'destruction' ? '2px solid var(--primary)' : '2px solid transparent', paddingBottom: '4px' }}
                         >
                             Destruction Sécurisée
+                        </button>
+                        <button
+                            onClick={() => setActiveView('alerts')}
+                            style={{ background: 'none', border: 'none', color: activeView === 'alerts' ? '#ef4444' : 'var(--text-muted)', fontWeight: '800', cursor: 'pointer', borderBottom: activeView === 'alerts' ? '2px solid #ef4444' : '2px solid transparent', paddingBottom: '4px' }}
+                        >
+                            <AlertCircle size={16} style={{ verticalAlign: 'middle', marginRight: '6px' }} />
+                            Alertes Sanitaires
                         </button>
                     </div>
                 </div>
@@ -521,6 +532,94 @@ export default function Inventory() {
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {activeView === 'alerts' && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 350px', gap: '2rem' }} className="fade-in">
+                    <div className="card" style={{ padding: 0 }}>
+                        <div style={{ padding: '24px', borderBottom: '1px solid var(--border)', background: '#fef2f2', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                                <h3 style={{ fontWeight: '900', fontSize: '1.2rem', color: '#991b1b', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <ShieldAlert size={24} /> Veille Sanitaire Pharmacovigilance
+                                </h3>
+                                <p style={{ fontSize: '0.8rem', color: '#b91c1c', marginTop: '4px' }}>Surveillance en temps réel des rappels ANSM et alertes internationales.</p>
+                            </div>
+                            <button className="glass" style={{ padding: '10px 20px', borderRadius: '12px', color: '#991b1b', border: '1px solid #fee2e2', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <RefreshCcw size={18} /> SCANNER ANSM
+                            </button>
+                        </div>
+                        <table className="data-table">
+                            <thead>
+                                <tr>
+                                    <th style={{ padding: '20px' }}>Type / Produit</th>
+                                    <th>Lot Affecté</th>
+                                    <th>Risque</th>
+                                    <th>Source</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {healthAlerts.map(alert => (
+                                    <tr key={alert.id} style={{ borderLeft: alert.level === 'Critical' ? '4px solid #ef4444' : '4px solid #f59e0b' }}>
+                                        <td style={{ padding: '16px 20px' }}>
+                                            <div style={{ fontWeight: '800' }}>{alert.product}</div>
+                                            <div style={{ fontSize: '0.7rem', color: '#991b1b', fontWeight: '700' }}>{alert.type.toUpperCase()}</div>
+                                        </td>
+                                        <td style={{ fontWeight: '900', color: '#1e293b' }}>{alert.lot}</td>
+                                        <td>
+                                            <span style={{ padding: '4px 8px', borderRadius: '6px', backgroundColor: alert.level === 'Critical' ? '#fee2e2' : '#fffbeb', color: alert.level === 'Critical' ? '#ef4444' : '#b45309', fontSize: '0.7rem', fontWeight: '900' }}>
+                                                {alert.level.toUpperCase()}
+                                            </span>
+                                        </td>
+                                        <td style={{ fontSize: '0.8rem', fontWeight: '700' }}>{alert.source}</td>
+                                        <td>
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                <button style={{ padding: '6px 12px', borderRadius: '8px', border: 'none', backgroundColor: '#ef4444', color: 'white', fontSize: '0.7rem', fontWeight: '800', cursor: 'pointer' }}>BLOQUER STOCK</button>
+                                                <button style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontSize: '0.7rem', fontWeight: '800', cursor: 'pointer' }}>IGNORER</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                        <div className="card" style={{ background: '#0f172a', color: 'white' }}>
+                            <h4 style={{ color: 'white', fontWeight: '900', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <AlertTriangle size={20} color="#f59e0b" /> Stats Sécurité
+                            </h4>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                <div style={{ textAlign: 'center' }}>
+                                    <div style={{ fontSize: '2.5rem', fontWeight: '900', color: '#ef4444' }}>{healthAlerts.length}</div>
+                                    <div style={{ fontSize: '0.75rem', opacity: 0.6 }}>Alertes actives nécessitant une action</div>
+                                </div>
+                                <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                        <span style={{ fontSize: '0.7rem', fontWeight: '700' }}>Couverture ANSM</span>
+                                        <span style={{ fontSize: '0.7rem', color: '#10b981', fontWeight: '800' }}>OPÉRATIONNEL</span>
+                                    </div>
+                                    <div style={{ height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px' }}>
+                                        <div style={{ height: '100%', width: '100%', background: '#10b981', borderRadius: '2px' }}></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="card">
+                            <h4 style={{ fontWeight: '900', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <FileText size={18} /> Actions Automatisées
+                            </h4>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '16px' }}>Configuration de l'isolation des lots suspects.</p>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.8rem', cursor: 'pointer' }}>
+                                <input type="checkbox" defaultChecked /> Bloquer la vente à l'officine
+                            </label>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.8rem', cursor: 'pointer', marginTop: '10px' }}>
+                                <input type="checkbox" defaultChecked /> Alerter le préparateur au scan
+                            </label>
                         </div>
                     </div>
                 </div>
