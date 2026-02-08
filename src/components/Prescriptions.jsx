@@ -1,169 +1,168 @@
 import React, { useState } from 'react';
 import {
-    FileText, Search, Plus, Filter, Clock, CheckCircle2,
-    AlertCircle, Scan, Download, User, Eye,
-    FileSearch, MoreVertical, RefreshCcw, CheckCircle,
-    MessageCircle, Send, Bell, BellRing, Smartphone,
-    Clock4, Loader2
+    FileText, Search, Filter, Clock, CheckCircle,
+    AlertCircle, Printer, Download, Eye, Scan,
+    Smartphone, MessageCircle, Send, Loader2,
+    Calendar, User, ChevronRight, Play, CheckCircle2,
+    Zap, Box
 } from 'lucide-react';
-import { MOCK_PRESCRIPTIONS } from '../data/mockData';
+
+const INITIAL_PRESCRIPTIONS = [
+    { id: 'ORD-2024-001', patient: 'Abdoulaye Diop', phone: '77 452 11 00', date: '08/02', time: '14:20', items: 3, status: 'À PRÉPARER', method: 'Mobile Scan', priority: 'High' },
+    { id: 'ORD-2024-002', patient: 'Fatou Sow', phone: '76 889 44 22', date: '08/02', time: '14:35', items: 5, status: 'EN PRÉPARATION', method: 'Caméra', priority: 'Normal' },
+    { id: 'ORD-2024-003', patient: 'Mamadou Kane', phone: '70 123 45 67', date: '08/02', time: '15:10', items: 2, status: 'PRÊTE', method: 'Saisie Manuelle', priority: 'Normal' },
+];
 
 export default function Prescriptions() {
-    const [viewMode, setViewMode] = useState('all');
+    const [activeTab, setActiveTab] = useState('preparation'); // 'queue' or 'preparation'
+    const [prescriptions, setPrescriptions] = useState(INITIAL_PRESCRIPTIONS);
     const [notifyingId, setNotifyingId] = useState(null);
-    const [notifiedList, setNotifiedList] = useState([]);
 
-    const handleNotify = (id) => {
+    const updateStatus = (id, newStatus) => {
+        setPrescriptions(prev => prev.map(p => p.id === id ? { ...p, status: newStatus } : p));
+
+        if (newStatus === 'PRÊTE') {
+            handleAutoNotify(id);
+        }
+    };
+
+    const handleAutoNotify = (id) => {
         setNotifyingId(id);
-        // Simulation of sending SMS/WhatsApp
+        // Simulate SMS sending
         setTimeout(() => {
             setNotifyingId(null);
-            setNotifiedList(prev => [...prev, id]);
-        }, 1500);
+            alert("Notification SMS/WhatsApp envoyée au patient.");
+        }, 2000);
     };
 
     return (
-        <div className="prescriptions fade-in" style={{ paddingBottom: '2rem' }}>
+        <div className="prescriptions fade-in" style={{ height: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column' }}>
             <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                 <div>
                     <h1 style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <FileText color="var(--primary)" size={32} /> Gestion des Ordonnances
+                        <Zap color="var(--primary)" size={32} /> Système de Préparation & SCOR
                     </h1>
-                    <p style={{ color: 'var(--text-muted)' }}>Archives numériques, flux de préparation et notifications patients.</p>
+                    <p style={{ color: 'var(--text-muted)' }}>Gestion intelligente des files d'attente et notifications automatiques de mise à disposition.</p>
                 </div>
                 <div style={{ display: 'flex', gap: '1rem' }}>
-                    <button className="glass" style={{ padding: '0.75rem 1.5rem', borderRadius: '14px', border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '600' }}>
-                        <Scan size={20} /> Scanner Dossier
-                    </button>
-                    <button style={{ padding: '0.75rem 1.5rem', borderRadius: '14px', border: 'none', backgroundColor: 'var(--primary)', color: 'white', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.3)' }}>
-                        <Plus size={20} /> Nouvelle Saisie
-                    </button>
+                    <div style={{ display: 'flex', background: '#f1f5f9', padding: '4px', borderRadius: '12px' }}>
+                        <button onClick={() => setActiveTab('queue')} style={{ padding: '8px 16px', borderRadius: '10px', border: 'none', background: activeTab === 'queue' ? 'white' : 'transparent', color: activeTab === 'queue' ? 'var(--primary)' : 'var(--text-muted)', fontWeight: '800', cursor: 'pointer', boxShadow: activeTab === 'queue' ? 'var(--shadow-sm)' : 'none' }}>Vue Liste</button>
+                        <button onClick={() => setActiveTab('preparation')} style={{ padding: '8px 16px', borderRadius: '10px', border: 'none', background: activeTab === 'preparation' ? 'white' : 'transparent', color: activeTab === 'preparation' ? 'var(--primary)' : 'var(--text-muted)', fontWeight: '800', cursor: 'pointer', boxShadow: activeTab === 'preparation' ? 'var(--shadow-sm)' : 'none' }}>Atelier Préparation</button>
+                    </div>
                 </div>
             </header>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '2rem' }}>
-                {[
-                    { label: 'À PRÉPARER', count: 12, color: '#f59e0b', icon: Clock, bg: '#fffbeb' },
-                    { label: 'ATTENTE RÉCUP.', count: 8, color: '#0ea5e9', icon: BellRing, bg: '#f0f9ff' },
-                    { label: 'NOTIFIÉS (SMS)', count: 24, color: '#10b981', icon: MessageCircle, bg: '#f0fdf4' },
-                    { label: 'REJETS SCOR', count: 2, color: '#ef4444', icon: AlertCircle, bg: '#fef2f2' },
-                ].map((stat, i) => (
-                    <div key={i} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '10px', border: 'none', background: 'white' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <div style={{ padding: '8px', backgroundColor: stat.bg, borderRadius: '10px', color: stat.color }}>
-                                <stat.icon size={20} />
+            {activeTab === 'preparation' ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', flex: 1, overflowY: 'auto', padding: '10px' }}>
+                    {/* Columns per Status */}
+                    {['À PRÉPARER', 'EN PRÉPARATION', 'PRÊTE'].map(status => (
+                        <div key={status} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 10px' }}>
+                                <h3 style={{ fontSize: '0.9rem', fontWeight: '900', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                                    {status} ({prescriptions.filter(p => p.status === status).length})
+                                </h3>
+                                <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: status === 'À PRÉPARER' ? '#ef4444' : status === 'EN PRÉPARATION' ? '#f59e0b' : '#10b981' }}></div>
                             </div>
-                            <span style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--secondary)' }}>{stat.count}</span>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                {prescriptions.filter(p => p.status === status).map(ord => (
+                                    <div key={ord.id} className="card fade-in" style={{ padding: '20px', borderLeft: `6px solid ${status === 'À PRÉPARER' ? '#ef4444' : status === 'EN PRÉPARATION' ? '#f59e0b' : '#10b981'}` }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                                            <span style={{ fontSize: '0.7rem', fontWeight: '900', color: 'var(--text-muted)' }}>#{ord.id}</span>
+                                            <span style={{ fontSize: '0.7rem', color: 'white', backgroundColor: ord.priority === 'High' ? '#ef4444' : '#94a3b8', padding: '2px 8px', borderRadius: '4px', fontWeight: '900' }}>{ord.priority}</span>
+                                        </div>
+                                        <div style={{ marginBottom: '16px' }}>
+                                            <p style={{ fontWeight: '800', fontSize: '1.1rem', color: 'var(--secondary)' }}>{ord.patient}</p>
+                                            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{ord.items} articles • {ord.method}</p>
+                                        </div>
+
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '16px', borderTop: '1px solid #f1f5f9' }}>
+                                            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                <Clock size={14} /> {ord.time}
+                                            </span>
+
+                                            {status === 'À PRÉPARER' && (
+                                                <button onClick={() => updateStatus(ord.id, 'EN PRÉPARATION')} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: 'var(--secondary)', color: 'white', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem' }}>
+                                                    <Play size={14} /> PRÉPARER
+                                                </button>
+                                            )}
+
+                                            {status === 'EN PRÉPARATION' && (
+                                                <button onClick={() => updateStatus(ord.id, 'PRÊTE')} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: 'var(--primary)', color: 'white', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem' }}>
+                                                    <CheckCircle2 size={14} /> TERMINER
+                                                </button>
+                                            )}
+
+                                            {status === 'PRÊTE' && (
+                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                    <button onClick={() => handleAutoNotify(ord.id)} disabled={notifyingId === ord.id} style={{ padding: '8px', borderRadius: '8px', border: '1px solid var(--primary)', background: 'white', color: 'var(--primary)', cursor: 'pointer' }}>
+                                                        {notifyingId === ord.id ? <Loader2 size={16} className="spin" /> : <MessageCircle size={16} />}
+                                                    </button>
+                                                    <button style={{ padding: '8px', borderRadius: '8px', border: 'none', background: '#f5f3ff', color: '#8b5cf6', cursor: 'pointer' }}>
+                                                        <Printer size={16} />
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                                {prescriptions.filter(p => p.status === status).length === 0 && (
+                                    <div style={{ padding: '40px 20px', textAlign: 'center', backgroundColor: '#f8fafc', borderRadius: '16px', border: '2px dashed #e2e8f0', opacity: 0.5 }}>
+                                        <p style={{ fontSize: '0.8rem', fontWeight: '700' }}>Vide</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                        <p style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', letterSpacing: '0.5px' }}>{stat.label}</p>
-                    </div>
-                ))}
-            </div>
-
-            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                <div style={{ padding: '20px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc' }}>
-                    <div style={{ position: 'relative', width: '400px' }}>
-                        <Search size={20} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                        <input
-                            type="text"
-                            placeholder="Patient, prescripteur ou n° ordonnance..."
-                            style={{ width: '100%', padding: '12px 12px 12px 48px', borderRadius: '12px', border: '1px solid #e2e8f0', outline: 'none', fontSize: '0.95rem' }}
-                        />
-                    </div>
-                    <div style={{ display: 'flex', gap: '8px', backgroundColor: 'white', padding: '4px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-                        <button onClick={() => setViewMode('all')} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: viewMode === 'all' ? 'var(--primary-light)' : 'transparent', color: viewMode === 'all' ? 'var(--primary)' : 'var(--text-muted)', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem' }}>Toutes</button>
-                        <button onClick={() => setViewMode('ready')} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: viewMode === 'ready' ? 'var(--primary-light)' : 'transparent', color: viewMode === 'ready' ? 'var(--primary)' : 'var(--text-muted)', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem' }}>Prêtes</button>
-                        <button onClick={() => setViewMode('pending')} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: viewMode === 'pending' ? 'var(--primary-light)' : 'transparent', color: viewMode === 'pending' ? 'var(--primary)' : 'var(--text-muted)', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem' }}>A Préparer</button>
-                    </div>
+                    ))}
                 </div>
-
-                <div style={{ overflowX: 'auto' }}>
+            ) : (
+                <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+                    {/* List View similar to before but with status badges */}
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                        <thead style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>
+                        <thead style={{ backgroundColor: '#f8fafc' }}>
                             <tr style={{ textAlign: 'left' }}>
-                                <th style={{ padding: '16px 24px', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '800' }}>PATIENT</th>
-                                <th style={{ padding: '16px', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '800' }}>DATE / MODE</th>
-                                <th style={{ padding: '16px', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '800' }}>STATUT</th>
-                                <th style={{ padding: '16px', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '800' }}>SUIVI SMS</th>
-                                <th style={{ padding: '16px 24px', textAlign: 'right', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '800' }}>ACTIONS</th>
+                                <th style={{ padding: '20px' }}>Patient</th>
+                                <th>Méthode</th>
+                                <th>Items</th>
+                                <th>Statut</th>
+                                <th style={{ padding: '20px', textAlign: 'right' }}>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {MOCK_PRESCRIPTIONS.map((presc, idx) => {
-                                const isBeingNotified = notifyingId === presc.id;
-                                const hasBeenNotified = notifiedList.includes(presc.id);
-
-                                return (
-                                    <tr key={presc.id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.2s' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
-                                        <td style={{ padding: '16px 24px' }}>
-                                            <div style={{ fontWeight: '800', color: 'var(--secondary)', fontSize: '0.95rem' }}>{presc.patient}</div>
-                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>+221 77 123 45 {idx}7</div>
-                                        </td>
-                                        <td style={{ padding: '16px' }}>
-                                            <div style={{ fontSize: '0.9rem', fontWeight: '600' }}>{presc.date}</div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.7rem', color: '#94a3b8', fontWeight: '700' }}>
-                                                {idx % 2 === 0 ? <Scan size={12} /> : <FileText size={12} />}
-                                                {idx % 2 === 0 ? 'NUMÉRISÉE' : 'SAISIE'}
-                                            </div>
-                                        </td>
-                                        <td style={{ padding: '16px' }}>
-                                            <span style={{
-                                                padding: '6px 14px', borderRadius: '100px', fontSize: '0.7rem', fontWeight: '800',
-                                                backgroundColor: presc.status === 'Prêt' ? '#dcfce7' : presc.status === 'En cours' ? '#e0f2fe' : '#fef3c7',
-                                                color: presc.status === 'Prêt' ? '#15803d' : presc.status === 'En cours' ? '#0369a1' : '#b45309',
-                                                display: 'inline-flex', alignItems: 'center', gap: '6px'
-                                            }}>
-                                                <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: 'currentColor' }}></div>
-                                                {presc.status.toUpperCase()}
-                                            </span>
-                                        </td>
-                                        <td style={{ padding: '16px' }}>
-                                            {presc.status === 'Prêt' ? (
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    {hasBeenNotified ? (
-                                                        <span style={{ fontSize: '0.75rem', color: 'var(--success)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                            <CheckCircle2 size={14} /> SMS Envoyé
-                                                        </span>
-                                                    ) : (
-                                                        <button
-                                                            onClick={() => handleNotify(presc.id)}
-                                                            disabled={isBeingNotified}
-                                                            style={{
-                                                                padding: '6px 12px', borderRadius: '8px', border: '1px solid #1dcad3',
-                                                                background: '#e0fafb', color: '#1dcad3', fontSize: '0.75rem',
-                                                                fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
-                                                            }}
-                                                        >
-                                                            {isBeingNotified ? <Loader2 size={14} className="spin" /> : <MessageCircle size={14} />}
-                                                            {isBeingNotified ? 'Envoi...' : 'Notifier Patient'}
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                <span style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>Attente préparation</span>
-                                            )}
-                                        </td>
-                                        <td style={{ padding: '16px 24px', textAlign: 'right' }}>
-                                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                                                <button style={{ padding: '8px', borderRadius: '10px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', color: 'var(--primary)' }} title="Voir l'image"><Eye size={18} /></button>
-                                                <button style={{
-                                                    padding: '8px 16px', borderRadius: '10px', border: 'none',
-                                                    background: presc.status === 'Prêt' ? '#f1f5f9' : 'var(--primary)',
-                                                    color: presc.status === 'Prêt' ? 'var(--text-muted)' : 'white',
-                                                    cursor: 'pointer', fontWeight: '700', fontSize: '0.8rem'
-                                                }}>
-                                                    {presc.status === 'Prêt' ? 'Délivrer' : 'Préparer'}
-                                                </button>
-                                                <button style={{ padding: '8px', borderRadius: '10px', border: 'none', background: 'none', cursor: 'pointer', color: '#94a3b8' }}><MoreVertical size={18} /></button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
+                            {prescriptions.map(p => (
+                                <tr key={p.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                    <td style={{ padding: '20px' }}>
+                                        <div style={{ fontWeight: '800', color: 'var(--secondary)' }}>{p.patient}</div>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{p.id} • {p.time}</div>
+                                    </td>
+                                    <td>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: '700', color: '#8b5cf6' }}>
+                                            {p.method.includes('Scan') ? <Smartphone size={14} /> : <Scan size={14} />}
+                                            {p.method}
+                                        </div>
+                                    </td>
+                                    <td><span style={{ fontWeight: '800' }}>{p.items}</span></td>
+                                    <td>
+                                        <span style={{
+                                            padding: '4px 10px', borderRadius: '100px', fontSize: '0.7rem', fontWeight: '900',
+                                            backgroundColor: p.status === 'PRÊTE' ? '#dcfce7' : p.status === 'EN PRÉPARATION' ? '#fff7ed' : '#fee2e2',
+                                            color: p.status === 'PRÊTE' ? '#15803d' : p.status === 'EN PRÉPARATION' ? '#9a3412' : '#b91c1c'
+                                        }}>
+                                            {p.status}
+                                        </span>
+                                    </td>
+                                    <td style={{ padding: '20px', textAlign: 'right' }}>
+                                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                            <button style={{ padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', color: 'var(--text-muted)', cursor: 'pointer' }}><Eye size={18} /></button>
+                                            <button style={{ padding: '8px', borderRadius: '8px', border: 'none', background: 'white', color: 'var(--primary)', border: '1px solid var(--primary)', cursor: 'pointer' }}><Printer size={18} /></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
                         </tbody>
                     </table>
                 </div>
-            </div>
+            )}
         </div>
     );
 }

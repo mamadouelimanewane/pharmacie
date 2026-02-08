@@ -3,7 +3,9 @@ import {
     Shield, Landmark, FileCheck, AlertCircle,
     Search, Download, Filter, CheckCircle2,
     Clock, ArrowRight, User, Percent,
-    FileText, Send, PieChart
+    FileText, Send, PieChart, PenTool,
+    Scan, FileSearch, X, CheckCircle,
+    Info, Eye, AlertTriangle
 } from 'lucide-react';
 
 const MUTUELLES_LIST = [
@@ -14,174 +16,181 @@ const MUTUELLES_LIST = [
 ];
 
 const PENDING_CLAIMS = [
-    { id: 'BC-2024-001', patient: 'Abdoulaye Diop', mutuelle: 'IPM Dakar', date: '08/02/2026', amount: 12500, status: 'En attente' },
-    { id: 'BC-2024-002', patient: 'Fatou Sow', mutuelle: 'AXA Sénégal', date: '08/02/2026', amount: 35400, status: 'Télétransmis' },
-    { id: 'BC-2024-003', patient: 'Mamadou Kane', mutuelle: 'IPRES', date: '07/02/2026', amount: 8900, status: 'Rejeté', error: 'NSS Invalide' },
-    { id: 'BC-2024-004', patient: 'Awa Ndiaye', mutuelle: 'NSIA', date: '07/02/2026', amount: 15000, status: 'Payé' },
+    { id: 'BC-2024-001', patient: 'Abdoulaye Diop', mutuelle: 'IPM Dakar', date: '08/02/2026', amount: 12500, scan: true, signature: true, status: 'Prêt SCOR' },
+    { id: 'BC-2024-002', patient: 'Fatou Sow', mutuelle: 'AXA Sénégal', date: '08/02/2026', amount: 35400, scan: true, signature: false, status: 'Incomplet' },
+    { id: 'BC-2024-003', patient: 'Mamadou Kane', mutuelle: 'IPRES', date: '07/02/2026', amount: 8900, scan: false, signature: false, status: 'Incomplet', error: 'Scan manquant' },
+    { id: 'BC-2024-004', patient: 'Awa Ndiaye', mutuelle: 'NSIA', date: '07/02/2026', amount: 15000, scan: true, signature: true, status: 'Télétransmis' },
+    { id: 'BC-2024-005', patient: 'Mme Diop', mutuelle: 'IPM Dakar', date: '09/02/2026', amount: 22000, scan: true, signature: true, status: 'Prêt SCOR' },
 ];
 
 export default function Mutuelles() {
     const [activeView, setActiveView] = useState('bordereaux');
+    const [filter, setFilter] = useState('Tous');
+
+    const filteredClaims = PENDING_CLAIMS.filter(c => {
+        if (filter === 'Tous') return true;
+        return c.status === filter;
+    });
 
     return (
         <div className="mutuelles fade-in" style={{ paddingBottom: '2rem' }}>
             <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                 <div>
                     <h1 style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <Shield color="var(--primary)" size={32} /> Gestion des Mutuelles & Tiers-Payant
+                        <Shield color="var(--primary)" size={32} /> Registre Tiers-Payant & SCOR
                     </h1>
-                    <p style={{ color: 'var(--text-muted)' }}>Suivi des conventions, télétransmissions et gestion des remboursements (Bons de prise en charge).</p>
+                    <p style={{ color: 'var(--text-muted)' }}>Contrôle de conformité des dossiers : signatures électroniques et ordonnances numérisées.</p>
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem' }}>
                     <button className="glass" style={{ padding: '0.75rem 1.25rem', borderRadius: '12px', border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '600' }}>
-                        <Download size={18} /> Rapports
+                        <Download size={18} /> Exporter Bordereaux
                     </button>
-                    <button style={{ padding: '0.75rem 1.25rem', borderRadius: '12px', border: 'none', backgroundColor: 'var(--primary)', color: 'white', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Send size={18} /> Télétransmettre le lot
+                    <button style={{ padding: '0.75rem 1.25rem', borderRadius: '12px', border: 'none', backgroundColor: 'var(--primary)', color: 'white', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 4px 6px rgba(16, 185, 129, 0.2)' }}>
+                        <Send size={18} /> Télétransmettre Lot SCOR
                     </button>
                 </div>
             </header>
 
-            {/* Statistiques Tiers-Payant */}
+            {/* Statistiques SCOR & Compliance */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '2rem' }}>
-                <div className="card" style={{ borderLeft: '4px solid #10b981' }}>
-                    <p style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>MONTANT À RÉCOUVRER</p>
-                    <p style={{ fontSize: '1.6rem', fontWeight: '900' }}>4 250 800 F</p>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--success)', marginTop: '4px' }}>85 dossiers actifs</p>
+                <div className="card" style={{ borderLeft: '4px solid var(--primary)' }}>
+                    <p style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>TAUX DE CONFORMITÉ SCOR</p>
+                    <p style={{ fontSize: '1.6rem', fontWeight: '900' }}>94.2%</p>
+                    <div style={{ width: '100%', height: '4px', backgroundColor: '#f1f5f9', borderRadius: '2px', marginTop: '8px' }}>
+                        <div style={{ width: '94%', height: '100%', backgroundColor: 'var(--primary)', borderRadius: '2px' }}></div>
+                    </div>
+                </div>
+                <div className="card" style={{ borderLeft: '4px solid #8b5cf6' }}>
+                    <p style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>ORDS. NUMÉRISÉES</p>
+                    <p style={{ fontSize: '1.6rem', fontWeight: '900' }}>1,248</p>
+                    <p style={{ fontSize: '0.75rem', color: '#8b5cf6', marginTop: '4px' }}>+12 aujourd'hui</p>
                 </div>
                 <div className="card" style={{ borderLeft: '4px solid #f59e0b' }}>
-                    <p style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>BONS EN ATTENTE</p>
-                    <p style={{ fontSize: '1.6rem', fontWeight: '900' }}>12</p>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--warning)', marginTop: '4px' }}>Vérification nécessaire</p>
+                    <p style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>SIGNATURES MANQUANTES</p>
+                    <p style={{ fontSize: '1.6rem', fontWeight: '900' }}>8</p>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--warning)', marginTop: '4px' }}>Action requise</p>
                 </div>
-                <div className="card" style={{ borderLeft: '4px solid #ef4444' }}>
-                    <p style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>REJETS CONVENTIONS</p>
-                    <p style={{ fontSize: '1.6rem', fontWeight: '900' }}>3</p>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--error)', marginTop: '4px' }}>Erreurs de matricule</p>
-                </div>
-                <div className="card" style={{ borderLeft: '4px solid #6366f1' }}>
-                    <p style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>DÉLAI MOYEN REMBOURSEMENT</p>
-                    <p style={{ fontSize: '1.6rem', fontWeight: '900' }}>18 Jours</p>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>Stable</p>
+                <div className="card" style={{ borderLeft: '4px solid #0ea5e9' }}>
+                    <p style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>EN ATTENTE RÉCOUVREMENT</p>
+                    <p style={{ fontSize: '1.6rem', fontWeight: '900' }}>3.8M F</p>
+                    <p style={{ fontSize: '0.75rem', color: '#0ea5e9', marginTop: '4px' }}>Cycle 15 jours</p>
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
-
-                {/* Liste des Bordereaux / Suivi des Bons */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem' }}>
                 <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
-                    <div style={{ padding: '20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ padding: '24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'white' }}>
                         <div style={{ display: 'flex', gap: '1rem' }}>
-                            <button onClick={() => setActiveView('bordereaux')} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: activeView === 'bordereaux' ? 'var(--primary-light)' : 'transparent', color: activeView === 'bordereaux' ? 'var(--primary)' : 'var(--text-muted)', fontWeight: '700', cursor: 'pointer' }}>Suivi des Dossiers</button>
-                            <button onClick={() => setActiveView('conventions')} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: activeView === 'conventions' ? 'var(--primary-light)' : 'transparent', color: activeView === 'conventions' ? 'var(--primary)' : 'var(--text-muted)', fontWeight: '700', cursor: 'pointer' }}>Conventions (Assureurs)</button>
-                        </div>
-                        <div style={{ position: 'relative' }}>
-                            <Search size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                            <input type="text" placeholder="Rechercher un bon..." style={{ padding: '8px 8px 8px 32px', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '0.85rem' }} />
-                        </div>
-                    </div>
-
-                    {activeView === 'bordereaux' ? (
-                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                            <thead style={{ backgroundColor: '#f8fafc' }}>
-                                <tr style={{ textAlign: 'left' }}>
-                                    <th style={{ padding: '15px' }}>N° Bon</th>
-                                    <th>Patient</th>
-                                    <th>Mutuelle</th>
-                                    <th>Montant</th>
-                                    <th>Statut</th>
-                                    <th style={{ padding: '15px' }}>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {PENDING_CLAIMS.map(claim => (
-                                    <tr key={claim.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                        <td style={{ padding: '15px', fontSize: '0.85rem', fontWeight: '600' }}>{claim.id}</td>
-                                        <td style={{ padding: '15px' }}>
-                                            <div style={{ fontWeight: '600', fontSize: '0.9rem' }}>{claim.patient}</div>
-                                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{claim.date}</div>
-                                        </td>
-                                        <td>{claim.mutuelle}</td>
-                                        <td style={{ fontWeight: '700' }}>{claim.amount.toLocaleString()} F</td>
-                                        <td>
-                                            <span style={{
-                                                padding: '4px 10px', borderRadius: '100px', fontSize: '0.7rem', fontWeight: '800',
-                                                backgroundColor: claim.status === 'Payé' ? '#dcfce7' : claim.status === 'Rejeté' ? '#fee2e2' : '#f0f9ff',
-                                                color: claim.status === 'Payé' ? '#15803d' : claim.status === 'Rejeté' ? '#b91c1c' : '#0369a1'
-                                            }}>
-                                                {claim.status.toUpperCase()}
-                                            </span>
-                                            {claim.error && <p style={{ fontSize: '0.65rem', color: 'var(--error)', marginTop: '2px' }}>{claim.error}</p>}
-                                        </td>
-                                        <td>
-                                            <button style={{ border: 'none', background: 'none', color: 'var(--primary)', cursor: 'pointer' }}><FileText size={18} /></button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    ) : (
-                        <div style={{ padding: '20px', display: 'grid', gap: '12px' }}>
-                            {MUTUELLES_LIST.map(mut => (
-                                <div key={mut.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', borderRadius: '12px', border: '1px solid #f1f5f9' }}>
-                                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                                        <div style={{ width: '40px', height: '40px', backgroundColor: '#f1f5f9', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                            <Landmark size={20} color="var(--primary)" />
-                                        </div>
-                                        <div>
-                                            <p style={{ fontWeight: '700' }}>{mut.name}</p>
-                                            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{mut.type} • Taux : {mut.coverage}</p>
-                                        </div>
-                                    </div>
-                                    <span style={{ fontSize: '0.8rem', fontWeight: '700', color: mut.status === 'Conventionné' ? 'var(--success)' : 'var(--warning)' }}>{mut.status}</span>
-                                </div>
+                            {['Tous', 'Prêt SCOR', 'Incomplet', 'Télétransmis'].map(f => (
+                                <button
+                                    key={f}
+                                    onClick={() => setFilter(f)}
+                                    style={{
+                                        padding: '10px 20px', borderRadius: '12px', border: 'none',
+                                        background: filter === f ? 'var(--primary-light)' : '#f8fafc',
+                                        color: filter === f ? 'var(--primary)' : 'var(--text-muted)',
+                                        fontWeight: '800', cursor: 'pointer', transition: 'all 0.2s',
+                                        fontSize: '0.85rem'
+                                    }}
+                                >
+                                    {f}
+                                </button>
                             ))}
                         </div>
-                    )}
+                        <div style={{ position: 'relative', width: '300px' }}>
+                            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                            <input type="text" placeholder="Patient, Mutuelle ou N° Bon..." style={{ width: '100%', padding: '12px 12px 12px 40px', borderRadius: '12px', border: '1px solid #e2e8f0', outline: 'none', fontSize: '0.9rem' }} />
+                        </div>
+                    </div>
+
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                            <tr style={{ textAlign: 'left' }}>
+                                <th style={{ padding: '20px', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)' }}>ID DOSSIER</th>
+                                <th style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)' }}>PATIENT / MUTUELLE</th>
+                                <th style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)' }}>MONTANT</th>
+                                <th style={{ textAlign: 'center', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)' }}>SCAN</th>
+                                <th style={{ textAlign: 'center', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)' }}>SIGN.</th>
+                                <th style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)' }}>CONFORMITÉ</th>
+                                <th style={{ padding: '20px', textAlign: 'right' }}>ACTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredClaims.map(claim => (
+                                <tr key={claim.id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.2s' }} className="table-row-hover">
+                                    <td style={{ padding: '20px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--secondary)' }}>{claim.id}</td>
+                                    <td>
+                                        <div style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--secondary)' }}>{claim.patient}</div>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            <Landmark size={12} /> {claim.mutuelle} • {claim.date}
+                                        </div>
+                                    </td>
+                                    <td><span style={{ fontWeight: '900', color: 'var(--primary)', fontSize: '1.1rem' }}>{claim.amount.toLocaleString()} F</span></td>
+                                    <td style={{ textAlign: 'center' }}>
+                                        <div style={{ display: 'inline-flex', padding: '8px', borderRadius: '10px', backgroundColor: claim.scan ? '#f0fdf4' : '#fef2f2', color: claim.scan ? '#16a34a' : '#ef4444' }}>
+                                            {claim.scan ? <Scan size={18} /> : <AlertTriangle size={18} />}
+                                        </div>
+                                    </td>
+                                    <td style={{ textAlign: 'center' }}>
+                                        <div style={{ display: 'inline-flex', padding: '8px', borderRadius: '10px', backgroundColor: claim.signature ? '#f5f3ff' : '#fff7ed', color: claim.signature ? '#8b5cf6' : '#f59e0b' }}>
+                                            {claim.signature ? <PenTool size={18} /> : <AlertCircle size={18} />}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span style={{
+                                            padding: '6px 14px', borderRadius: '100px', fontSize: '0.75rem', fontWeight: '900',
+                                            backgroundColor: claim.status === 'Prêt SCOR' ? '#dcfce7' : claim.status === 'Télétransmis' ? '#f0f9ff' : '#fff7ed',
+                                            color: claim.status === 'Prêt SCOR' ? '#15803d' : claim.status === 'Télétransmis' ? '#0369a1' : '#92400e',
+                                            display: 'flex', alignItems: 'center', gap: '6px', width: 'fit-content'
+                                        }}>
+                                            {claim.status === 'Prêt SCOR' && <CheckCircle size={14} />}
+                                            {claim.status === 'Incomplet' && <Clock size={14} />}
+                                            {claim.status.toUpperCase()}
+                                        </span>
+                                    </td>
+                                    <td style={{ padding: '20px', textAlign: 'right' }}>
+                                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                            <button style={{ padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', color: 'var(--secondary)', cursor: 'pointer' }} title="Voir documents"><Eye size={18} /></button>
+                                            <button style={{ padding: '8px', borderRadius: '8px', border: 'none', background: 'var(--primary-light)', color: 'var(--primary)', cursor: 'pointer' }} title="Valider pour SCOR"><FileCheck size={18} /></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
-
-                {/* Volet de droite : Actions & Aide */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                    <div className="card" style={{ backgroundColor: '#f0fdf4', border: '1px solid #dcfce7' }}>
-                        <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <CheckCircle2 color="var(--success)" size={20} /> Qualité de Saisie
-                        </h3>
-                        <div style={{ textAlign: 'center', padding: '10px 0' }}>
-                            <div style={{ fontSize: '2rem', fontWeight: '900', color: 'var(--success)' }}>98%</div>
-                            <p style={{ fontSize: '0.75rem', color: '#166534' }}>Fichiers conformes pour télétransmission</p>
-                        </div>
-                        <div style={{ width: '100%', height: '6px', backgroundColor: '#dcfce7', borderRadius: '3px', marginTop: '10px' }}>
-                            <div style={{ width: '98%', height: '100%', backgroundColor: 'var(--success)', borderRadius: '3px' }}></div>
-                        </div>
-                    </div>
-
-                    <div className="card">
-                        <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1rem' }}>Actions de Tiers-Payant</h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                            <button style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid var(--border)', background: 'white', textAlign: 'left', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}>
-                                Imprimer Bordereau Récap <ArrowRight size={16} />
-                            </button>
-                            <button style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid var(--border)', background: 'white', textAlign: 'left', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}>
-                                Relancer les impayés <ArrowRight size={16} />
-                            </button>
-                            <button style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid var(--border)', background: 'white', textAlign: 'left', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}>
-                                Mise à jour conventions <ArrowRight size={16} />
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="card" style={{ backgroundColor: '#fffbeb', border: '1px solid #fef3c7' }}>
-                        <div style={{ display: 'flex', gap: '10px' }}>
-                            <AlertCircle size={24} color="#f59e0b" />
-                            <div>
-                                <p style={{ fontWeight: '700', color: '#92400e', fontSize: '0.85rem' }}>Alerte Convention</p>
-                                <p style={{ fontSize: '0.75rem', color: '#b45309' }}>La convention avec NSIA Assurances expire dans 15 jours. Une mise à jour des tarifs est disponible.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
             </div>
+
+            {/* Sidebar Alerts within the page */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', marginTop: '2rem' }}>
+                <div className="card" style={{ border: '2px dashed #e2e8f0', background: 'white', padding: '24px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                        <Info size={24} color="var(--primary)" />
+                        <h3 style={{ fontWeight: '800', fontSize: '1rem' }}>Guide SCOR V2.1</h3>
+                    </div>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
+                        Toutes les ordonnances doivent être numérisées en couleur (300dpi) avant la télétransmission du lot. Les signatures électroniques sont validées par la CNIL.
+                    </p>
+                </div>
+                <div className="card" style={{ background: '#f5f3ff', border: '1px solid #ddd6fe', padding: '24px' }}>
+                    <h3 style={{ fontWeight: '800', fontSize: '1rem', color: '#5b21b6', marginBottom: '12px' }}>Optimisation Flux</h3>
+                    <p style={{ fontSize: '0.8rem', color: '#6d28d9' }}>
+                        Vous avez 8 dossiers "Incomplets" bloqués par une signature manquante. Utilisez l'application mobile pour capturer les signatures lors de la livraison.
+                    </p>
+                </div>
+                <div className="card" style={{ background: '#fef2f2', border: '1px solid #fecaca', padding: '24px' }}>
+                    <h3 style={{ fontWeight: '800', fontSize: '1rem', color: '#b91c1c', marginBottom: '12px' }}>Rejets Assurance</h3>
+                    <p style={{ fontSize: '0.8rem', color: '#991b1b' }}>
+                        AXA Sénégal a rejeté 3 dossiers ce matin (Motif : Carte expirable). Vérifiez les dates de droits dans l'onglet Conventions.
+                    </p>
+                </div>
+            </div>
+
+            <style>{`
+                .table-row-hover:hover {
+                    background-color: #f8fafc;
+                }
+            `}</style>
         </div>
     );
 }
