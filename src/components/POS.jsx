@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Search, Plus, Minus, Trash2, CreditCard, Banknote,
     ShieldCheck, Printer, Scan, ShoppingCart, X,
     Delete, ArrowLeft, History, User, Settings,
     Power, ChevronRight, Hash, Star, Smartphone,
-    QrCode, Loader2, CheckCircle2
+    QrCode, Loader2, CheckCircle2, Barcode
 } from 'lucide-react';
 import { MOCK_PRODUCTS } from '../data/mockData';
 
@@ -70,6 +70,11 @@ export default function POS() {
     const [mobileStatus, setMobileStatus] = useState('idle');
     const [phoneNumber, setPhoneNumber] = useState('');
 
+    // Barcode Scanner logic
+    const barcodeBuffer = useRef('');
+    const lastKeyTime = useRef(0);
+    const [lastScanned, setLastScanned] = useState(null);
+
     const total = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
     const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
 
@@ -87,6 +92,8 @@ export default function POS() {
             }
             return [...prev, { ...product, quantity: 1 }];
         });
+        setLastScanned(product.name);
+        setTimeout(() => setLastScanned(null), 2000);
     };
 
     const removeFromCart = (id) => setCart(prev => prev.filter(item => item.id !== id));
@@ -112,6 +119,35 @@ export default function POS() {
             ));
         }
     };
+
+    // Global Key Listener for Barcode Scanner
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            const now = Date.now();
+
+            // If the time between keys is very short, it's likely a scanner
+            if (now - lastKeyTime.current > 100) {
+                barcodeBuffer.current = '';
+            }
+
+            lastKeyTime.current = now;
+
+            if (e.key === 'Enter') {
+                if (barcodeBuffer.current.length > 2) {
+                    const product = MOCK_PRODUCTS.find(p => p.code === barcodeBuffer.current);
+                    if (product) {
+                        addToCart(product);
+                        barcodeBuffer.current = '';
+                    }
+                }
+            } else if (e.key.length === 1) {
+                barcodeBuffer.current += e.key;
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
 
     const startMobilePayment = (type) => {
         setMobilePayment(type);
@@ -151,9 +187,34 @@ export default function POS() {
             height: 'calc(100vh - 100px)',
             backgroundColor: '#f1f5f9',
             padding: '12px',
-            borderRadius: 'var(--radius-lg)'
+            borderRadius: 'var(--radius-lg)',
+            position: 'relative'
         }}>
+            {lastScanned && (
+                <div style={{
+                    position: 'absolute',
+                    top: '20px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    backgroundColor: 'var(--primary)',
+                    color: 'white',
+                    padding: '10px 20px',
+                    borderRadius: '50px',
+                    zIndex: 1000,
+                    boxShadow: 'var(--shadow-lg)',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px'
+                }}>
+                    <Barcode size={20} />
+                    Scanné : {lastScanned} (+1)
+                </div>
+            )}
+
+            {/* Colonne de Gauche : Catalogue Produit */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', overflow: 'hidden' }}>
+                {/* Barre Supérieure Tactile */}
                 <div style={{
                     display: 'flex',
                     gap: '12px',
@@ -166,7 +227,7 @@ export default function POS() {
                         <Search size={24} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                         <input
                             type="text"
-                            placeholder="Rechercher ou scanner..."
+                            placeholder="Rechercher ou scanner directement..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             style={{
@@ -180,8 +241,23 @@ export default function POS() {
                             }}
                         />
                     </div>
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '0 16px',
+                        backgroundColor: '#f1f5f9',
+                        borderRadius: '12px',
+                        fontSize: '0.8rem',
+                        color: 'var(--text-muted)',
+                        fontWeight: '600'
+                    }}>
+                        <Barcode size={20} />
+                        AUTO SCAN ACTIF
+                    </div>
                 </div>
 
+                {/* Catégories */}
                 <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '4px 0' }}>
                     {CATEGORIES.map(cat => (
                         <button
@@ -195,7 +271,8 @@ export default function POS() {
                                 color: activeCategory === cat ? 'white' : 'var(--text-main)',
                                 fontWeight: '600',
                                 whiteSpace: 'nowrap',
-                                cursor: 'pointer'
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
                             }}
                         >
                             {cat}
@@ -203,6 +280,7 @@ export default function POS() {
                     ))}
                 </div>
 
+                {/* Grille de Produits */}
                 <div style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
@@ -221,71 +299,112 @@ export default function POS() {
                                 backgroundColor: 'white',
                                 borderRadius: '16px',
                                 border: '1px solid #e2e8f0',
-                                cursor: 'pointer'
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
                             }}
+                            onMouseDown={(e) => e.target.style.transform = 'translateY(2px)'}
+                            onMouseUp={(e) => e.target.style.transform = 'translateY(0)'}
                         >
-                            <span style={{ fontWeight: '700', fontSize: '0.9rem', textAlign: 'center', marginBottom: '8px' }}>{p.name}</span>
-                            <span style={{ fontWeight: '800', color: 'var(--primary)' }}>{p.price.toLocaleString()} F</span>
+                            <span style={{ fontWeight: '700', fontSize: '0.9rem', textAlign: 'center', marginBottom: '8px', color: 'var(--secondary)' }}>{p.name}</span>
+                            <span style={{ fontWeight: '800', color: 'var(--primary)', fontSize: '1rem' }}>{p.price.toLocaleString()} F</span>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px' }}>Code: {p.code}</span>
                         </button>
                     ))}
                 </div>
             </div>
 
+            {/* Colonne de Droite : Panier et Caisse */}
             <div style={{
                 display: 'flex',
                 flexDirection: 'column',
                 backgroundColor: 'white',
                 borderRadius: 'var(--radius-md)',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                boxShadow: 'var(--shadow-md)'
             }}>
                 <div style={{ padding: '20px', backgroundColor: 'var(--secondary)', color: 'white' }}>
-                    <h2 style={{ fontSize: '1.25rem', fontWeight: '700' }}>Caisse N1</h2>
-                    <p style={{ fontSize: '0.75rem', opacity: 0.7 }}>Cassier : Dr. Wane</p>
-                </div>
-
-                <div style={{ flex: 1, overflowY: 'auto', padding: '12px' }}>
-                    {cart.map(item => (
-                        <div key={item.id} onClick={() => setSelectedItem(item.id)} style={{ display: 'flex', padding: '12px', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', backgroundColor: selectedItem === item.id ? '#f8fafc' : 'transparent' }}>
-                            <div style={{ flex: 1 }}>
-                                <p style={{ fontWeight: '600' }}>{item.name}</p>
-                                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{item.price.toLocaleString()} F x {item.quantity}</p>
-                            </div>
-                            <p style={{ fontWeight: '700' }}>{(item.price * item.quantity).toLocaleString()} F</p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <h2 style={{ fontSize: '1.25rem', fontWeight: '700' }}>Caisse N1</h2>
+                            <p style={{ fontSize: '0.75rem', opacity: 0.7 }}>Cassier : Dr. Wane</p>
                         </div>
-                    ))}
+                    </div>
                 </div>
 
-                <div style={{ padding: '20px', backgroundColor: '#f8fafc' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                        <span style={{ fontWeight: '700' }}>TOTAL</span>
-                        <span style={{ fontWeight: '800', fontSize: '1.5rem', color: 'var(--primary)' }}>{total.toLocaleString()} F</span>
+                {/* Liste des articles */}
+                <div style={{ flex: 1, overflowY: 'auto', padding: '12px' }}>
+                    {cart.length === 0 ? (
+                        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', opacity: 0.5 }}>
+                            <ShoppingCart size={64} style={{ marginBottom: '16px' }} />
+                            <p style={{ fontWeight: '600' }}>Videz vos mains, scannez un produit !</p>
+                        </div>
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {cart.map(item => (
+                                <div
+                                    key={item.id}
+                                    onClick={() => setSelectedItem(item.id)}
+                                    style={{
+                                        display: 'flex',
+                                        padding: '16px',
+                                        borderRadius: '12px',
+                                        backgroundColor: selectedItem === item.id ? '#f0fdf4' : '#f8fafc',
+                                        border: selectedItem === item.id ? '2px solid var(--primary)' : '2px solid transparent',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    <div style={{ flex: 1 }}>
+                                        <p style={{ fontWeight: '700', color: 'var(--secondary)', marginBottom: '4px' }}>{item.name}</p>
+                                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                            {item.price.toLocaleString()} F x {item.quantity}
+                                        </p>
+                                    </div>
+                                    <div style={{ textAlign: 'right' }}>
+                                        <p style={{ fontWeight: '800', color: 'var(--secondary)' }}>{(item.price * item.quantity).toLocaleString()} F</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* Totaux */}
+                <div style={{ padding: '20px', borderTop: '2px dashed #f1f5f9', backgroundColor: '#f8fafc' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+                        <span style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--secondary)' }}>TOTAL</span>
+                        <span style={{ fontSize: '1.75rem', fontWeight: '900', color: 'var(--primary)' }}>{total.toLocaleString()} F</span>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
-                        <button onClick={() => startMobilePayment('wave')} style={{ padding: '12px', borderRadius: '8px', border: '2px solid #1dcad3', background: 'white', cursor: 'pointer', color: '#1dcad3', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}><WaveIcon /> WAVE</button>
-                        <button onClick={() => startMobilePayment('om')} style={{ padding: '12px', borderRadius: '8px', border: '2px solid #FF6600', background: 'white', cursor: 'pointer', color: '#FF6600', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}><OMIcon /> ORANGE</button>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+                        <button onClick={() => startMobilePayment('wave')} style={{ padding: '12px', borderRadius: '12px', border: '2px solid #1dcad3', background: 'white', cursor: 'pointer', color: '#1dcad3', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}><WaveIcon /> WAVE</button>
+                        <button onClick={() => startMobilePayment('om')} style={{ padding: '12px', borderRadius: '12px', border: '2px solid #FF6600', background: 'white', cursor: 'pointer', color: '#FF6600', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}><OMIcon /> ORANGE</button>
                     </div>
 
-                    <button onClick={() => { setShowCheckout(true); setShowNumpad(true); }} style={{ width: '100%', padding: '16px', borderRadius: '12px', border: 'none', backgroundColor: 'var(--primary)', color: 'white', fontWeight: '800', cursor: 'pointer' }}>ESPÈCES</button>
+                    <button
+                        onClick={() => { setShowCheckout(true); setShowNumpad(true); }}
+                        style={{ width: '100%', padding: '20px', borderRadius: '16px', border: 'none', backgroundColor: 'var(--primary)', color: 'white', fontWeight: '800', fontSize: '1.25rem', cursor: 'pointer' }}
+                    >
+                        ENCAISSER ESPÈCES
+                    </button>
                 </div>
 
                 {(showNumpad || showCheckout || mobilePayment) && (
-                    <div style={{ position: 'absolute', bottom: '24px', right: '480px', width: '320px', backgroundColor: 'white', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', padding: '24px', zIndex: 100 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-                            <h3 style={{ fontWeight: '700' }}>Paiement</h3>
-                            <button onClick={() => { setShowNumpad(false); setShowCheckout(false); setMobilePayment(null); setMobileStatus('idle'); }} style={{ border: 'none', background: 'none', cursor: 'pointer' }}><X /></button>
+                    <div style={{ position: 'absolute', bottom: '24px', right: '480px', width: '320px', backgroundColor: 'white', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', padding: '24px', zIndex: 100, border: '1px solid var(--border)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                            <h3 style={{ fontWeight: '700' }}>{mobilePayment ? 'Mobile Money' : 'Encaissement'}</h3>
+                            <button onClick={() => { setShowNumpad(false); setShowCheckout(false); setMobilePayment(null); setMobileStatus('idle'); }} style={{ border: 'none', background: 'none', cursor: 'pointer' }}><X size={24} /></button>
                         </div>
 
                         {showCheckout && (
                             <div style={{ marginBottom: '16px' }}>
-                                <p style={{ textAlign: 'right', fontSize: '1.5rem', fontWeight: '800' }}>{cashAmount || '0'} F</p>
-                                {parseInt(cashAmount) >= total && <p style={{ textAlign: 'right', color: 'green' }}>Rendu : {(parseInt(cashAmount) - total).toLocaleString()} F</p>}
+                                <p style={{ textAlign: 'right', fontSize: '1.5rem', fontWeight: '800', color: 'var(--primary)' }}>{cashAmount || '0'} F</p>
+                                {parseInt(cashAmount) >= total && <p style={{ textAlign: 'right', color: 'green', fontWeight: '700' }}>Rendu : {(parseInt(cashAmount) - total).toLocaleString()} F</p>}
                             </div>
                         )}
 
                         {mobilePayment === 'wave' && (
                             <div style={{ textAlign: 'center', padding: '20px' }}>
-                                {mobileStatus === 'pending' ? <><QrCode size={100} /><p>Attente scan...</p></> : <p style={{ color: 'green' }}>Succès Wave !</p>}
+                                {mobileStatus === 'pending' ? <><QrCode size={100} color="#1dcad3" /><p>Scan QR Wave...</p></> : <p style={{ color: 'green', fontWeight: '700' }}>Paiement Wave OK !</p>}
                             </div>
                         )}
 
@@ -293,19 +412,23 @@ export default function POS() {
                             <div style={{ textAlign: 'center' }}>
                                 {mobileStatus === 'idle' ? (
                                     <>
-                                        <p style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{phoneNumber || 'Numéro OM'}</p>
-                                        <button disabled={phoneNumber.length < 9} onClick={() => setMobileStatus('pending')} style={{ width: '100%', padding: '12px', background: '#FF6600', color: 'white', border: 'none', borderRadius: '8px', marginTop: '8px' }}>VALIDER</button>
+                                        <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#FF6600' }}>{phoneNumber || 'Numéro OM'}</p>
+                                        <button disabled={phoneNumber.length < 9} onClick={() => setMobileStatus('pending')} style={{ width: '100%', padding: '16px', background: '#FF6600', color: 'white', border: 'none', borderRadius: '12px', marginTop: '12px', fontWeight: '700' }}>VALIDER PUSH OM</button>
                                     </>
-                                ) : mobileStatus === 'pending' ? <p>Attente validation USSD...</p> : <p style={{ color: 'green' }}>Succès OM !</p>}
+                                ) : mobileStatus === 'pending' ? <p>Attente validation client...</p> : <p style={{ color: 'green', fontWeight: '700' }}>Orange Money OK !</p>}
                             </div>
                         )}
 
                         {(showCheckout || (mobilePayment === 'om' && mobileStatus === 'idle')) && (
-                            <Numpad onInput={handleNumpadInput} onDelete={() => showCheckout ? setCashAmount(prev => prev.slice(0, -1)) : setPhoneNumber(prev => prev.slice(0, -1))} onClear={() => showCheckout ? setCashAmount('') : setPhoneNumber('')} />
+                            <Numpad
+                                onInput={handleNumpadInput}
+                                onDelete={() => showCheckout ? setCashAmount(prev => prev.slice(0, -1)) : setPhoneNumber(prev => prev.slice(0, -1))}
+                                onClear={() => showCheckout ? setCashAmount('') : setPhoneNumber('')}
+                            />
                         )}
 
                         {((showCheckout && parseInt(cashAmount) >= total) || mobileStatus === 'success') && (
-                            <button onClick={finalizePayment} style={{ width: '100%', padding: '16px', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 'bold', marginTop: '12px' }}>VALIDER LA VENTE</button>
+                            <button onClick={finalizePayment} style={{ width: '100%', padding: '16px', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 'bold', marginTop: '16px', fontSize: '1.1rem', cursor: 'pointer' }}>CONCLURE LA VENTE</button>
                         )}
                     </div>
                 )}
