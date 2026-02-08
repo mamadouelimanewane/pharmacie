@@ -14,7 +14,7 @@ export default function Inventory() {
     const [searchTerm, setSearchTerm] = useState('');
     const [showOrderModal, setShowOrderModal] = useState(false);
     const [showReceiveModal, setShowReceiveModal] = useState(false);
-    const [activeView, setActiveView] = useState('logistic'); // 'logistic', 'physical', 'returns', 'destruction', 'alerts'
+    const [activeView, setActiveView] = useState('logistic'); // 'logistic', 'physical', 'returns', 'destruction', 'alerts', 'planning'
     const [physicalInventory, setPhysicalInventory] = useState({});
     const [inventoryLog, setInventoryLog] = useState([]);
     const [isReconciling, setIsReconciling] = useState(false);
@@ -121,7 +121,7 @@ export default function Inventory() {
             <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                 <div>
                     <h1 style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--secondary)' }}>
-                        {activeView === 'logistic' ? 'Gestion Logistique' : activeView === 'physical' ? 'Inventaire Physique' : activeView === 'returns' ? 'Retours Fournisseurs' : activeView === 'destruction' ? 'Destruction Sécurisée' : 'Centre d\'Alertes Sanitaires'}
+                        {activeView === 'logistic' ? 'Gestion Logistique' : activeView === 'physical' ? 'Inventaire Physique' : activeView === 'returns' ? 'Retours Fournisseurs' : activeView === 'destruction' ? 'Destruction Sécurisée' : activeView === 'alerts' ? 'Centre d\'Alertes Sanitaires' : 'Planning Prédictif IA'}
                     </h1>
                     <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
                         <button
@@ -154,6 +154,13 @@ export default function Inventory() {
                         >
                             <AlertCircle size={16} style={{ verticalAlign: 'middle', marginRight: '6px' }} />
                             Alertes Sanitaires
+                        </button>
+                        <button
+                            onClick={() => setActiveView('planning')}
+                            style={{ background: 'none', border: 'none', color: activeView === 'planning' ? 'var(--primary)' : 'var(--text-muted)', fontWeight: '800', cursor: 'pointer', borderBottom: activeView === 'planning' ? '2px solid var(--primary)' : '2px solid transparent', paddingBottom: '4px' }}
+                        >
+                            <RefreshCcw size={16} style={{ verticalAlign: 'middle', marginRight: '6px' }} />
+                            Planning Prédictif IA
                         </button>
                     </div>
                 </div>
@@ -678,6 +685,90 @@ export default function Inventory() {
                         <div style={{ marginTop: '32px', display: 'flex', justifyContent: 'flex-end', gap: '16px' }}>
                             <button onClick={() => setSelectedAlertForPatients(null)} className="glass" style={{ padding: '14px 28px', borderRadius: '14px', border: '1px solid #e2e8f0', color: 'var(--secondary)', fontWeight: '800', cursor: 'pointer' }}>FERMER</button>
                             <button onClick={() => { alert("Protocole de rappel général activé."); setSelectedAlertForPatients(null); }} style={{ padding: '14px 28px', borderRadius: '14px', border: 'none', background: '#991b1b', color: 'white', fontWeight: '900', cursor: 'pointer', boxShadow: '0 10px 15px -3px rgba(153, 27, 27, 0.4)' }}>DÉCLARER RAPPEL EFFECTUÉ</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {activeView === 'planning' && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 400px', gap: '2rem' }} className="fade-in">
+                    <div className="card" style={{ padding: 0 }}>
+                        <div style={{ padding: '24px', borderBottom: '1px solid var(--border)', background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)' }}>
+                            <h3 style={{ fontWeight: '900', fontSize: '1.2rem', color: '#1e40af', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <RefreshCcw size={20} /> Prévisions de Stock Stratégique (IA)
+                            </h3>
+                            <p style={{ fontSize: '0.85rem', color: '#3b82f6', marginTop: '4px', fontWeight: '600' }}>Analyse basée sur les tendances épidémiologiques et historiques Sédar/ANSM</p>
+                        </div>
+                        <div style={{ padding: '24px' }}>
+                            <div className="table-container">
+                                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                    <thead>
+                                        <tr style={{ textAlign: 'left', borderBottom: '2px solid var(--border)' }}>
+                                            <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: '800' }}>PRODUIT</th>
+                                            <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: '800' }}>DEMANDE PRÉVUE (30j)</th>
+                                            <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: '800' }}>STOCK ACTUEL</th>
+                                            <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: '800' }}>COMMANDE SUGGÉRÉE</th>
+                                            <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: '800' }}>CONTEXTE IA</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {[
+                                            { name: 'Coartem Dispersible', demand: '+150%', stock: 24, suggest: 120, trend: 'Saison des pluies - Pic Palu', color: '#dc2626' },
+                                            { name: 'Humex Rhume', demand: '+85%', stock: 12, suggest: 60, trend: 'Vague de froid matinal prévue', color: '#ea580c' },
+                                            { name: 'Amoxicilline 1g', demand: '+20%', stock: 45, suggest: 30, trend: 'Demande stable', color: '#2563eb' },
+                                            { name: 'Paracétamol 1000mg', demand: '+10%', stock: 156, suggest: 0, trend: 'Couverture suffisante', color: '#16a34a' }
+                                        ].map((item, idx) => (
+                                            <tr key={idx} style={{ borderBottom: '1px solid var(--border)' }}>
+                                                <td style={{ padding: '16px', fontWeight: '800', color: 'var(--secondary)' }}>{item.name}</td>
+                                                <td style={{ padding: '16px', fontWeight: '900', color: item.color }}>{item.demand}</td>
+                                                <td style={{ padding: '16px', fontWeight: '700' }}>{item.stock}</td>
+                                                <td style={{ padding: '16px' }}>
+                                                    <span style={{ padding: '4px 12px', background: item.suggest > 0 ? '#10b981' : '#f1f5f9', color: item.suggest > 0 ? 'white' : 'var(--text-muted)', borderRadius: '100px', fontWeight: '900', fontSize: '0.85rem' }}>
+                                                        {item.suggest > 0 ? `+${item.suggest} Btes` : 'A JOUR'}
+                                                    </span>
+                                                </td>
+                                                <td style={{ padding: '16px', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600' }}>{item.trend}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                        <div className="card" style={{ background: 'var(--secondary)', color: 'white', padding: '24px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                                <ShieldCheck color="var(--primary)" size={24} />
+                                <h3 style={{ fontWeight: '900', fontSize: '1.1rem' }}>Sérénité d'Appro</h3>
+                            </div>
+                            <p style={{ opacity: 0.8, fontSize: '0.9rem', lineHeight: '1.6', marginBottom: '20px' }}>
+                                L'IA a analysé les 3 dernières années et les rapports météo. <strong>Vague de grippe</strong> prévue sous 10 jours.
+                            </p>
+                            <button style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: 'var(--primary)', color: 'white', fontWeight: '900', cursor: 'pointer', boxShadow: '0 4px 6px rgba(16, 185, 129, 0.4)' }}>
+                                GÉNÉRER LE PANIER IA
+                            </button>
+                        </div>
+
+                        <div className="card" style={{ border: '1px solid #dbeafe', background: '#f8faff', padding: '24px' }}>
+                            <h4 style={{ fontWeight: '900', fontSize: '0.9rem', color: '#1e40af', marginBottom: '16px' }}>ANALYSE DES FLUX LOCAUX</h4>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                {[
+                                    { label: 'Indice de Rupture Évité', val: '98%', color: '#16a34a' },
+                                    { label: 'Réduction Surstock', val: '-15%', color: '#2563eb' },
+                                    { label: 'Optimisation Trésorerie', val: '+2.4M F', color: '#8b5cf6' }
+                                ].map((stat, i) => (
+                                    <div key={i}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                                            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)' }}>{stat.label}</span>
+                                            <span style={{ fontSize: '0.85rem', fontWeight: '900', color: stat.color }}>{stat.val}</span>
+                                        </div>
+                                        <div style={{ height: '6px', background: '#e2e8f0', borderRadius: '3px' }}>
+                                            <div style={{ height: '100%', width: stat.val.includes('%') ? stat.val.replace('-', '') : '80%', background: stat.color, borderRadius: '3px' }}></div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>
