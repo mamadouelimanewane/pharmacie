@@ -7,7 +7,7 @@ import {
     QrCode, Loader2, CheckCircle2, Barcode, Unlock,
     Mail, FileText, Download, Clock, RotateCcw, UserPlus,
     AlertTriangle, Landmark, Shield, Camera, Image as ImageIcon,
-    FileSearch, CheckCircle, PenTool, Eraser
+    FileSearch, CheckCircle, PenTool, Eraser, Link as LinkIcon
 } from 'lucide-react';
 import { MOCK_PRODUCTS, MOCK_PATIENTS } from '../data/mockData';
 
@@ -84,11 +84,12 @@ export default function POS() {
 
     // Prescription Scan State
     const [showScanModal, setShowScanModal] = useState(false);
+    const [scanMethod, setScanMethod] = useState('camera'); // 'camera' or 'mobile'
     const [isScanning, setIsScanning] = useState(false);
     const [scannedDoc, setScannedDoc] = useState(null);
 
     // Signature State
-    const [useSignature, setUseSignature] = useState(false); // Option Toggle
+    const [useSignature, setUseSignature] = useState(false);
     const [isSigning, setIsSigning] = useState(false);
     const [signatureCaptured, setSignatureCaptured] = useState(false);
 
@@ -249,7 +250,7 @@ export default function POS() {
             borderRadius: 'var(--radius-lg)',
             position: 'relative'
         }}>
-            {/* Overlay Signature (Optionnel) */}
+            {/* Overlay Signature */}
             {isSigning && (
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 6000, backdropFilter: 'blur(10px)' }}>
                     <div style={{ backgroundColor: 'white', padding: '40px', borderRadius: '32px', width: '600px', textAlign: 'center', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
@@ -288,34 +289,60 @@ export default function POS() {
                 </div>
             )}
 
-            {/* Modal Numérisation Ordonnance */}
+            {/* Modal Numérisation Ordonnance (With Smartphone support) */}
             {showScanModal && (
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 5000, backdropFilter: 'blur(8px)' }}>
-                    <div style={{ backgroundColor: 'white', padding: '40px', borderRadius: '32px', width: '500px', textAlign: 'center', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
+                    <div style={{ backgroundColor: 'white', padding: '40px', borderRadius: '32px', width: '550px', textAlign: 'center', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
                             <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>Numérisation Ordonnance</h2>
-                            <button onClick={() => setShowScanModal(false)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}><X size={32} /></button>
+                            <button onClick={() => { setShowScanModal(false); setScanMethod('camera'); }} style={{ border: 'none', background: 'none', cursor: 'pointer' }}><X size={32} /></button>
                         </div>
 
-                        <div style={{ padding: '60px 40px', border: '3px dashed #e2e8f0', borderRadius: '24px', backgroundColor: '#f8fafc', marginBottom: '24px', position: 'relative', overflow: 'hidden' }}>
-                            {isScanning ? (
-                                <div className="fade-in">
-                                    <Loader2 size={48} className="spin" color="var(--primary)" style={{ margin: '0 auto 16px' }} />
-                                    <p style={{ fontWeight: '700' }}>Lecture du document...</p>
-                                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '4px', backgroundColor: 'var(--primary)', animation: 'scanMove 1.5s infinite' }}></div>
-                                </div>
+                        <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
+                            <button onClick={() => setScanMethod('camera')} style={{ flex: 1, padding: '12px', borderRadius: '14px', border: 'none', background: scanMethod === 'camera' ? 'var(--primary-light)' : '#f1f5f9', color: scanMethod === 'camera' ? 'var(--primary)' : 'var(--text-muted)', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                <Camera size={18} /> Caméra Bureau
+                            </button>
+                            <button onClick={() => setScanMethod('mobile')} style={{ flex: 1, padding: '12px', borderRadius: '14px', border: 'none', background: scanMethod === 'mobile' ? 'var(--primary-light)' : '#f1f5f9', color: scanMethod === 'mobile' ? 'var(--primary)' : 'var(--text-muted)', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                <Smartphone size={18} /> Smartphone
+                            </button>
+                        </div>
+
+                        <div style={{ padding: '40px 20px', border: '3px dashed #e2e8f0', borderRadius: '24px', backgroundColor: '#f8fafc', marginBottom: '24px', position: 'relative', overflow: 'hidden', minHeight: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {scanMethod === 'camera' ? (
+                                isScanning ? (
+                                    <div className="fade-in">
+                                        <Loader2 size={48} className="spin" color="var(--primary)" style={{ margin: '0 auto 16px' }} />
+                                        <p style={{ fontWeight: '700' }}>Lecture en cours...</p>
+                                        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '4px', backgroundColor: 'var(--primary)', animation: 'scanMove 1.5s infinite' }}></div>
+                                    </div>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+                                        <Camera size={64} color="#94a3b8" />
+                                        <p style={{ color: 'var(--text-muted)', fontWeight: '600', fontSize: '0.9rem' }}>Alignez l'ordonnance sous l'objectif de la webcam.</p>
+                                        <button onClick={simulateScan} style={{ padding: '14px 28px', borderRadius: '16px', border: 'none', backgroundColor: 'var(--primary)', color: 'white', fontWeight: '800', cursor: 'pointer', fontSize: '1rem' }}>Capturer</button>
+                                    </div>
+                                )
                             ) : (
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-                                    <Camera size={64} color="#94a3b8" />
-                                    <p style={{ color: 'var(--text-muted)', fontWeight: '600' }}>Placez l'ordonnance sous la caméra ou scannez le document.</p>
-                                    <button onClick={simulateScan} style={{ padding: '16px 32px', borderRadius: '16px', border: 'none', backgroundColor: 'var(--primary)', color: 'white', fontWeight: '800', cursor: 'pointer', fontSize: '1.1rem', boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.3)' }}>Lancer le Scan</button>
+                                <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+                                    <div style={{ padding: '15px', backgroundColor: 'white', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: 'var(--shadow-sm)' }}>
+                                        <QrCode size={140} color="var(--secondary)" />
+                                    </div>
+                                    <div>
+                                        <p style={{ fontWeight: '800', color: 'var(--secondary)' }}>Scannez avec votre Smartphone</p>
+                                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>Utilisez l'appareil photo de votre téléphone pour numériser l'ordonnance instantanément.</p>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontSize: '0.8rem', fontWeight: '700' }}>
+                                        <Loader2 size={16} className="spin" /> Attente de connexion mobile...
+                                    </div>
+                                    {/* Simulation mobile scan success button for demo */}
+                                    <button onClick={simulateScan} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#f0fdf4', color: '#166534', fontSize: '0.7rem', fontWeight: '700', cursor: 'pointer' }}>Simuler réception mobile</button>
                                 </div>
                             )}
                         </div>
 
                         <div style={{ display: 'flex', gap: '12px' }}>
-                            <button style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white', fontWeight: '700' }}><ImageIcon size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} /> Parcourir</button>
-                            <button style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white', fontWeight: '700' }}><QrCode size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} /> e-Ordonnance</button>
+                            <button style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white', fontWeight: '700', fontSize: '0.9rem' }}><ImageIcon size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} /> Galerie</button>
+                            <button style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white', fontWeight: '700', fontSize: '0.9rem' }}><LinkIcon size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} /> e-Ordonnance</button>
                         </div>
                     </div>
                 </div>
