@@ -4,7 +4,8 @@ import {
     ShieldCheck, Printer, Scan, ShoppingCart, X,
     Delete, ArrowLeft, History, User, Settings,
     Power, ChevronRight, Hash, Star, Smartphone,
-    QrCode, Loader2, CheckCircle2, Barcode, Unlock
+    QrCode, Loader2, CheckCircle2, Barcode, Unlock,
+    Mail, FileText, Download
 } from 'lucide-react';
 import { MOCK_PRODUCTS } from '../data/mockData';
 
@@ -71,6 +72,9 @@ export default function POS() {
     const [phoneNumber, setPhoneNumber] = useState('');
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [autoDrawer, setAutoDrawer] = useState(true);
+    const [printOption, setPrintOption] = useState(true);
+    const [showReceipt, setShowReceipt] = useState(false);
+    const [lastSale, setLastSale] = useState(null);
 
     // Barcode Scanner logic
     const barcodeBuffer = useRef('');
@@ -88,9 +92,6 @@ export default function POS() {
 
     const triggerDrawer = () => {
         setDrawerOpen(true);
-        console.log("Hardware: Sending ESC/POS command (ESC p m t1 t2) to trigger cash drawer opening...");
-        // In a real app with Web Serial:
-        // await port.write(new Uint8Array([27, 112, 0, 25, 250]));
         setTimeout(() => setDrawerOpen(false), 3000);
     };
 
@@ -104,18 +105,6 @@ export default function POS() {
         });
         setLastScanned(product.name);
         setTimeout(() => setLastScanned(null), 2000);
-    };
-
-    const removeFromCart = (id) => setCart(prev => prev.filter(item => item.id !== id));
-
-    const updateQuantity = (id, delta) => {
-        setCart(prev => prev.map(item => {
-            if (item.id === id) {
-                const newQty = Math.max(1, item.quantity + delta);
-                return { ...item, quantity: newQty };
-            }
-            return item;
-        }));
     };
 
     const handleNumpadInput = (val) => {
@@ -154,36 +143,39 @@ export default function POS() {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
 
-    const startMobilePayment = (type) => {
-        setMobilePayment(type);
-        setMobileStatus('idle');
-        setPhoneNumber('');
-        if (type === 'wave') setMobileStatus('pending');
-    };
-
-    useEffect(() => {
-        if (mobileStatus === 'pending') {
-            const timer = setTimeout(() => {
-                setMobileStatus('success');
-            }, 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [mobileStatus]);
-
     const finalizePayment = (type) => {
+        const saleData = {
+            id: 'TK-' + Math.floor(Math.random() * 9999),
+            items: [...cart],
+            total: total,
+            date: new Date().toLocaleString(),
+            paymentMethod: type === 'cash' ? 'ESPÈCES' : mobilePayment === 'wave' ? 'WAVE' : 'ORANGE MONEY',
+            cashReceived: parseInt(cashAmount) || 0,
+            changeDue: type === 'cash' ? (parseInt(cashAmount) - total) : 0
+        };
+
         if (type === 'cash' && autoDrawer) {
             triggerDrawer();
         }
+
+        setLastSale(saleData);
+        if (printOption) {
+            setShowReceipt(true);
+        } else {
+            resetPOS();
+        }
+    };
+
+    const resetPOS = () => {
         setCart([]);
         setShowCheckout(false);
         setMobilePayment(null);
         setMobileStatus('idle');
         setCashAmount('');
         setShowNumpad(false);
-        // alert('Vente validée ! Impression du ticket...');
+        setShowReceipt(false);
+        setLastSale(null);
     };
-
-    const changeDue = parseInt(cashAmount) - total;
 
     return (
         <div className="pos-tactile" style={{
@@ -196,6 +188,77 @@ export default function POS() {
             borderRadius: 'var(--radius-lg)',
             position: 'relative'
         }}>
+            {/* Modal Ticket de Caisse */}
+            {showReceipt && lastSale && (
+                <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 3000
+                }}>
+                    <div style={{
+                        backgroundColor: 'white',
+                        padding: '30px',
+                        borderRadius: '16px',
+                        width: '380px',
+                        boxShadow: 'var(--shadow-lg)',
+                        position: 'relative'
+                    }}>
+                        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+                            <h2 style={{ fontSize: '1.2rem', marginBottom: '4px' }}>PHARMACIE DE LA TERRANGA</h2>
+                            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Mermoz, Dakar - Sénégal</p>
+                            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Tél: 33 800 00 00</p>
+                        </div>
+                        <div style={{ borderTop: '1px dashed #ccc', borderBottom: '1px dashed #ccc', padding: '10px 0', marginBottom: '15px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '5px' }}>
+                                <span>Ticket : {lastSale.id}</span>
+                                <span>{lastSale.date}</span>
+                            </div>
+                            <p style={{ fontSize: '0.8rem' }}>Caissier : Dr. Wane</p>
+                        </div>
+                        <div style={{ marginBottom: '15px' }}>
+                            {lastSale.items.map((item, i) => (
+                                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', marginBottom: '4px' }}>
+                                    <span>{item.quantity} x {item.name}</span>
+                                    <span>{(item.price * item.quantity).toLocaleString()} F</span>
+                                </div>
+                            ))}
+                        </div>
+                        <div style={{ borderTop: '2px solid #000', paddingTop: '10px', marginBottom: '15px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '800', fontSize: '1.1rem' }}>
+                                <span>TOTAL</span>
+                                <span>{lastSale.total.toLocaleString()} FCFA</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginTop: '10px', color: 'var(--text-muted)' }}>
+                                <span>Mode : {lastSale.paymentMethod}</span>
+                                {lastSale.paymentMethod === 'ESPÈCES' && <span>Reçu : {lastSale.cashReceived.toLocaleString()} F</span>}
+                            </div>
+                            {lastSale.changeDue > 0 && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'green', fontWeight: '700' }}>
+                                    <span>Rendu Monnaie</span>
+                                    <span>{lastSale.changeDue.toLocaleString()} F</span>
+                                </div>
+                            )}
+                        </div>
+                        <div style={{ textAlign: 'center', fontSize: '0.8rem', marginBottom: '25px' }}>
+                            <p>Merci de votre visite.</p>
+                            <p>Conservez ce ticket pour tout échange.</p>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                            <button onClick={() => { alert('Impression PDF...'); resetPOS(); }} style={{ padding: '12px', borderRadius: '10px', border: '1px solid var(--primary)', background: 'white', color: 'var(--primary)', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}><Printer size={18} /> IMPRIMER</button>
+                            <button onClick={() => { alert('Envoyé par email !'); resetPOS(); }} style={{ padding: '12px', borderRadius: '10px', border: 'none', background: 'var(--primary)', color: 'white', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}><Mail size={18} /> E-MAIL</button>
+                        </div>
+                        <button onClick={resetPOS} style={{ width: '100%', marginTop: '10px', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.9rem' }}>Ignorer</button>
+                    </div>
+                </div>
+            )}
+
             {/* Notification Tiroir */}
             {drawerOpen && (
                 <div style={{
@@ -210,47 +273,16 @@ export default function POS() {
                     zIndex: 2000,
                     textAlign: 'center',
                     boxShadow: '0 0 50px rgba(16, 185, 129, 0.4)',
-                    border: '2px solid var(--primary)',
-                    animation: 'pulse 1s infinite'
+                    border: '2px solid var(--primary)'
                 }}>
                     <Unlock size={64} color="var(--primary)" style={{ marginBottom: '16px' }} />
                     <h2 style={{ color: 'white' }}>TIROIR CAISSE OUVERT</h2>
-                    <p style={{ opacity: 0.8 }}>Impression du ticket en cours...</p>
                 </div>
             )}
 
-            {lastScanned && (
-                <div style={{
-                    position: 'absolute',
-                    top: '20px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    backgroundColor: 'var(--primary)',
-                    color: 'white',
-                    padding: '10px 20px',
-                    borderRadius: '50px',
-                    zIndex: 1000,
-                    boxShadow: 'var(--shadow-lg)',
-                    fontWeight: '600',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px'
-                }}>
-                    <Barcode size={20} />
-                    Scanné : {lastScanned} (+1)
-                </div>
-            )}
-
-            {/* Colonne de Gauche : Catalogue Produit */}
+            {/* Colonne de Gauche */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', overflow: 'hidden' }}>
-                <div style={{
-                    display: 'flex',
-                    gap: '12px',
-                    padding: '12px',
-                    backgroundColor: 'white',
-                    borderRadius: 'var(--radius-md)',
-                    boxShadow: 'var(--shadow-sm)'
-                }}>
+                <div style={{ display: 'flex', gap: '12px', padding: '12px', backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
                     <div style={{ position: 'relative', flex: 1 }}>
                         <Search size={24} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                         <input
@@ -258,61 +290,20 @@ export default function POS() {
                             placeholder="Chercher ou scanner..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            style={{
-                                width: '100%',
-                                padding: '16px 16px 16px 52px',
-                                borderRadius: '12px',
-                                border: '2px solid #e2e8f0',
-                                outline: 'none',
-                                fontSize: '1.1rem',
-                                backgroundColor: '#f8fafc'
-                            }}
+                            style={{ width: '100%', padding: '16px 16px 16px 52px', borderRadius: '12px', border: '2px solid #e2e8f0', outline: 'none', fontSize: '1.1rem' }}
                         />
                     </div>
                 </div>
 
                 <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '4px 0' }}>
                     {CATEGORIES.map(cat => (
-                        <button
-                            key={cat}
-                            onClick={() => setActiveCategory(cat)}
-                            style={{
-                                padding: '12px 24px',
-                                borderRadius: '100px',
-                                border: 'none',
-                                backgroundColor: activeCategory === cat ? 'var(--secondary)' : 'white',
-                                color: activeCategory === cat ? 'white' : 'var(--text-main)',
-                                fontWeight: '600',
-                                whiteSpace: 'nowrap',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            {cat}
-                        </button>
+                        <button key={cat} onClick={() => setActiveCategory(cat)} style={{ padding: '12px 24px', borderRadius: '100px', border: 'none', backgroundColor: activeCategory === cat ? 'var(--secondary)' : 'white', color: activeCategory === cat ? 'white' : 'var(--text-main)', fontWeight: '600', whiteSpace: 'nowrap', cursor: 'pointer' }}>{cat}</button>
                     ))}
                 </div>
 
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
-                    gap: '12px',
-                    overflowY: 'auto'
-                }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '12px', overflowY: 'auto' }}>
                     {filteredProducts.map(p => (
-                        <button
-                            key={p.id}
-                            onClick={() => addToCart(p)}
-                            style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                padding: '20px 12px',
-                                backgroundColor: 'white',
-                                borderRadius: '16px',
-                                border: '1px solid #e2e8f0',
-                                cursor: 'pointer'
-                            }}
-                        >
+                        <button key={p.id} onClick={() => addToCart(p)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 12px', backgroundColor: 'white', borderRadius: '16px', border: '1px solid #e2e8f0', cursor: 'pointer' }}>
                             <span style={{ fontWeight: '700', fontSize: '0.9rem', textAlign: 'center', marginBottom: '8px' }}>{p.name}</span>
                             <span style={{ fontWeight: '800', color: 'var(--primary)' }}>{p.price.toLocaleString()} F</span>
                         </button>
@@ -320,44 +311,24 @@ export default function POS() {
                 </div>
             </div>
 
-            {/* Colonne de Droite : Panier et Caisse */}
-            <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                backgroundColor: 'white',
-                borderRadius: 'var(--radius-md)',
-                overflow: 'hidden',
-                boxShadow: 'var(--shadow-md)'
-            }}>
+            {/* Colonne de Droite */}
+            <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'white', borderRadius: 'var(--radius-md)', overflow: 'hidden', boxShadow: 'var(--shadow-md)' }}>
                 <div style={{ padding: '20px', backgroundColor: 'var(--secondary)', color: 'white' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
                             <h2 style={{ fontSize: '1.25rem', fontWeight: '700' }}>Caisse N1</h2>
                             <p style={{ fontSize: '0.75rem', opacity: 0.7 }}>Cassier : Dr. Wane</p>
                         </div>
-                        <button
-                            onClick={() => setAutoDrawer(!autoDrawer)}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '6px',
-                                padding: '8px 12px',
-                                borderRadius: '8px',
-                                border: '1px solid rgba(255,255,255,0.2)',
-                                backgroundColor: autoDrawer ? 'rgba(16, 185, 129, 0.2)' : 'transparent',
-                                color: 'white',
-                                fontSize: '0.75rem',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            <Unlock size={14} /> TIROIR : {autoDrawer ? 'AUTO' : 'MANUEL'}
-                        </button>
+                        <div style={{ display: 'flex', gap: '6px', flexDirection: 'column' }}>
+                            <button onClick={() => setAutoDrawer(!autoDrawer)} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: autoDrawer ? 'rgba(16, 185, 129, 0.2)' : 'transparent', color: 'white', fontSize: '0.7rem', cursor: 'pointer' }}><Unlock size={12} /> {autoDrawer ? 'AUTO TIROIR' : 'DRAWER MAN'}</button>
+                            <button onClick={() => setPrintOption(!printOption)} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: printOption ? 'rgba(6, 182, 212, 0.2)' : 'transparent', color: 'white', fontSize: '0.7rem', cursor: 'pointer' }}><Printer size={12} /> {printOption ? 'AVEC TICKET' : 'SANS TICKET'}</button>
+                        </div>
                     </div>
                 </div>
 
                 <div style={{ flex: 1, overflowY: 'auto', padding: '12px' }}>
                     {cart.map(item => (
-                        <div key={item.id} onClick={() => setSelectedItem(item.id)} style={{ display: 'flex', padding: '12px', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', backgroundColor: selectedItem === item.id ? '#f8fafc' : 'transparent' }}>
+                        <div key={item.id} style={{ display: 'flex', padding: '12px', borderBottom: '1px solid #f1f5f9' }}>
                             <div style={{ flex: 1 }}>
                                 <p style={{ fontWeight: '600' }}>{item.name}</p>
                                 <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{item.price.toLocaleString()} F x {item.quantity}</p>
@@ -368,9 +339,9 @@ export default function POS() {
                 </div>
 
                 <div style={{ padding: '20px', backgroundColor: '#f8fafc' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-                        <span style={{ fontSize: '1.5rem', fontWeight: '800' }}>TOTAL</span>
-                        <span style={{ fontSize: '1.75rem', fontWeight: '900', color: 'var(--primary)' }}>{total.toLocaleString()} F</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+                        <span style={{ fontSize: '1.2rem', fontWeight: '800' }}>TOTAL</span>
+                        <span style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--primary)' }}>{total.toLocaleString()} F</span>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
@@ -380,7 +351,7 @@ export default function POS() {
 
                     <button
                         onClick={() => { setShowCheckout(true); setShowNumpad(true); }}
-                        style={{ width: '100%', padding: '20px', borderRadius: '16px', border: 'none', backgroundColor: 'var(--primary)', color: 'white', fontWeight: '800', fontSize: '1.25rem', cursor: 'pointer' }}
+                        style={{ width: '100%', padding: '18px', borderRadius: '12px', border: 'none', backgroundColor: 'var(--primary)', color: 'white', fontWeight: '800', cursor: 'pointer' }}
                     >
                         ENCAISSER ESPÈCES
                     </button>
@@ -402,7 +373,7 @@ export default function POS() {
 
                         {mobilePayment === 'wave' && (
                             <div style={{ textAlign: 'center', padding: '20px' }}>
-                                {mobileStatus === 'pending' ? <><QrCode size={100} color="#1dcad3" /><p>Scan QR Wave...</p></> : <p style={{ color: 'green', fontWeight: '700' }}>Wave Reçu !</p>}
+                                {mobileStatus === 'pending' ? <><QrCode size={100} color="#1dcad3" /><p>Scan QR Wave...</p></> : <p style={{ color: 'green', fontWeight: '700' }}>Paiement Reçu !</p>}
                             </div>
                         )}
 
@@ -411,9 +382,9 @@ export default function POS() {
                                 {mobileStatus === 'idle' ? (
                                     <>
                                         <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#FF6600' }}>{phoneNumber || 'Numéro OM'}</p>
-                                        <button disabled={phoneNumber.length < 9} onClick={() => setMobileStatus('pending')} style={{ width: '100%', padding: '16px', background: '#FF6600', color: 'white', border: 'none', borderRadius: '12px', marginTop: '12px', fontWeight: '700' }}>VALIDER PUSH OM</button>
+                                        <button disabled={phoneNumber.length < 9} onClick={() => setMobileStatus('pending')} style={{ width: '100%', padding: '12px', background: '#FF6600', color: 'white', border: 'none', borderRadius: '12px', marginTop: '12px', fontWeight: '700' }}>VALIDER PUSH OM</button>
                                     </>
-                                ) : mobileStatus === 'pending' ? <p>Attente client...</p> : <p style={{ color: 'green', fontWeight: '700' }}>OM Reçu !</p>}
+                                ) : mobileStatus === 'pending' ? <p>Attente client...</p> : <p style={{ color: 'green', fontWeight: '700' }}>Succès OM !</p>}
                             </div>
                         )}
 
@@ -422,19 +393,11 @@ export default function POS() {
                         )}
 
                         {((showCheckout && parseInt(cashAmount) >= total) || mobileStatus === 'success') && (
-                            <button onClick={() => finalizePayment(showCheckout ? 'cash' : 'mobile')} style={{ width: '100%', padding: '16px', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 'bold', marginTop: '16px', fontSize: '1.1rem', cursor: 'pointer' }}>CONCLURE & OUVRIR TIROIR</button>
+                            <button onClick={() => finalizePayment(showCheckout ? 'cash' : 'mobile')} style={{ width: '100%', padding: '16px', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 'bold', marginTop: '16px', fontSize: '1.1rem', cursor: 'pointer' }}>CONCLURE LA VENTE</button>
                         )}
                     </div>
                 )}
             </div>
-
-            <style>{`
-                @keyframes pulse {
-                    0% { transform: translate(-50%, -50%) scale(1); }
-                    50% { transform: translate(-50%, -50%) scale(1.02); }
-                    100% { transform: translate(-50%, -50%) scale(1); }
-                }
-            `}</style>
         </div>
     );
 }
