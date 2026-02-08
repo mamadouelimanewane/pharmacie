@@ -3,7 +3,8 @@ import {
     Package, Search, Filter, ArrowUpRight, AlertTriangle,
     RefreshCcw, Download, Calendar, Truck, Barcode,
     X, CheckCircle2, Plus, Trash2, FileText,
-    AlertCircle, CheckCircle, ArrowRight
+    AlertCircle, CheckCircle, ArrowRight, Smartphone,
+    QrCode, Loader2, Camera, Image as ImageIcon
 } from 'lucide-react';
 import { MOCK_PRODUCTS } from '../data/mockData';
 
@@ -17,6 +18,12 @@ export default function Inventory() {
     const [scanFeedback, setScanFeedback] = useState(null);
     const [invoiceMode, setInvoiceMode] = useState(false);
     const [invoiceData, setInvoiceData] = useState(null);
+
+    // Smartphone Scan State for Logistics
+    const [showLogisticsScan, setShowLogisticsScan] = useState(false);
+    const [logisticsScanMethod, setLogisticsScanMethod] = useState('camera'); // 'camera' or 'mobile'
+    const [isLogisticsScanning, setIsLogisticsScanning] = useState(false);
+    const [scannedInvoice, setScannedInvoice] = useState(null);
 
     const barcodeBuffer = useRef('');
     const lastKeyTime = useRef(0);
@@ -92,6 +99,16 @@ export default function Inventory() {
         ]);
     };
 
+    const simulateLogisticsScan = () => {
+        setIsLogisticsScanning(true);
+        setTimeout(() => {
+            setIsLogisticsScanning(false);
+            setScannedInvoice({ id: 'INV-' + Math.random().toString(36).substr(2, 9), status: 'OK', vendor: 'Laborex' });
+            setShowLogisticsScan(false);
+            loadWholesalerInvoice();
+        }, 2000);
+    };
+
     const getReconciliationStatus = (item) => {
         if (!invoiceMode) return null;
         const invoiceItem = invoiceData?.find(i => i.id === item.id);
@@ -106,6 +123,7 @@ export default function Inventory() {
         setReceivedItems([]);
         setShowReceiveModal(false);
         setInvoiceMode(false);
+        setScannedInvoice(null);
     };
 
     return (
@@ -132,6 +150,56 @@ export default function Inventory() {
                 </div>
             </header>
 
+            {/* Modal de Scan Logistique (Smartphone support) */}
+            {showLogisticsScan && (
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.9)', zIndex: 6000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)' }}>
+                    <div style={{ backgroundColor: 'white', padding: '40px', borderRadius: '32px', width: '550px', textAlign: 'center', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
+                            <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>Scan Bordereau Livraison</h2>
+                            <button onClick={() => setShowLogisticsScan(false)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}><X size={32} /></button>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
+                            <button onClick={() => setLogisticsScanMethod('camera')} style={{ flex: 1, padding: '12px', borderRadius: '14px', border: 'none', background: logisticsScanMethod === 'camera' ? 'var(--primary-light)' : '#f1f5f9', color: logisticsScanMethod === 'camera' ? 'var(--primary)' : 'var(--text-muted)', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                <Camera size={18} /> Webcam
+                            </button>
+                            <button onClick={() => setLogisticsScanMethod('mobile')} style={{ flex: 1, padding: '12px', borderRadius: '14px', border: 'none', background: logisticsScanMethod === 'mobile' ? 'var(--primary-light)' : '#f1f5f9', color: logisticsScanMethod === 'mobile' ? 'var(--primary)' : 'var(--text-muted)', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                <Smartphone size={18} /> Mobile Scan
+                            </button>
+                        </div>
+
+                        <div style={{ padding: '40px 20px', border: '3px dashed #e2e8f0', borderRadius: '24px', backgroundColor: '#f8fafc', marginBottom: '24px', minHeight: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+                            {logisticsScanMethod === 'camera' ? (
+                                isLogisticsScanning ? (
+                                    <div className="fade-in">
+                                        <Loader2 size={48} className="spin" color="var(--primary)" style={{ margin: '0 auto 16px' }} />
+                                        <p style={{ fontWeight: '700' }}>Analyse du bordereau...</p>
+                                        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '4px', backgroundColor: 'var(--primary)', animation: 'scanMove 1.5s infinite' }}></div>
+                                    </div>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+                                        <FileText size={64} color="#94a3b8" />
+                                        <p style={{ color: 'var(--text-muted)', fontWeight: '600', fontSize: '0.9rem' }}>Présentez le bordereau de livraison devant la webcam.</p>
+                                        <button onClick={simulateLogisticsScan} style={{ padding: '14px 28px', borderRadius: '16px', border: 'none', backgroundColor: 'var(--primary)', color: 'white', fontWeight: '800', cursor: 'pointer' }}>Analyser</button>
+                                    </div>
+                                )
+                            ) : (
+                                <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+                                    <div style={{ padding: '15px', backgroundColor: 'white', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+                                        <QrCode size={140} color="var(--secondary)" />
+                                    </div>
+                                    <p style={{ fontWeight: '800', color: 'var(--secondary)' }}>Scannez pour utiliser votre mobile</p>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontSize: '0.8rem', fontWeight: '700' }}>
+                                        <Loader2 size={16} className="spin" /> Connexion mobile en attente...
+                                    </div>
+                                    <button onClick={simulateLogisticsScan} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#f0fdf4', color: '#166534', fontSize: '0.7rem', fontWeight: '700', cursor: 'pointer' }}>Simuler scan mobile réussi</button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Modal de Réception Ultra-Moderne avec Pointage Facture */}
             {showReceiveModal && (
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.9)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
@@ -148,16 +216,20 @@ export default function Inventory() {
                                         {invoiceMode ? <CheckCircle size={14} /> : <AlertCircle size={14} />}
                                         Pointage Facture {invoiceMode ? 'Actif' : 'Désactivé'}
                                     </span>
-                                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Scan automatique activé</span>
+                                    {scannedInvoice && (
+                                        <span style={{ fontSize: '0.85rem', color: 'var(--success)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            <CheckCircle2 size={14} /> Bordereau {scannedInvoice.vendor} Archivé
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                             <div style={{ display: 'flex', gap: '8px' }}>
                                 {!invoiceMode && (
                                     <button
-                                        onClick={loadWholesalerInvoice}
-                                        style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--primary)', background: '#f0fdf4', color: 'var(--primary)', fontWeight: '600', cursor: 'pointer', fontSize: '0.85rem' }}
+                                        onClick={() => setShowLogisticsScan(true)}
+                                        style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--primary)', background: '#f0fdf4', color: 'var(--primary)', fontWeight: '600', cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}
                                     >
-                                        Charger Facture Laborex/COPHASE
+                                        <Smartphone size={16} /> Scanner Bordereau Mobile
                                     </button>
                                 )}
                                 <button onClick={() => { setShowReceiveModal(false); setInvoiceMode(false); }} style={{ padding: '8px', borderRadius: '50%', border: 'none', background: '#f1f5f9', cursor: 'pointer' }}><X size={24} /></button>
@@ -310,6 +382,11 @@ export default function Inventory() {
             </div>
 
             <style>{`
+                @keyframes scanMove {
+                    0% { top: 0; }
+                    50% { top: 100%; }
+                    100% { top: 0; }
+                }
                 @keyframes fadeIn {
                     from { opacity: 0; transform: translateY(10px); }
                     to { opacity: 1; transform: translateY(0); }
