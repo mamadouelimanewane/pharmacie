@@ -116,7 +116,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
           <UserCircle size={24} />
         </div>
         <div style={{ flex: 1 }}>
-          <p style={{ fontSize: '0.875rem', fontWeight: '600' }}>Dr. Martin Durand</p>
+          <p style={{ fontSize: '0.875rem', fontWeight: '600' }}>Dr. Mamadou Elimane Wane</p>
           <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Pharmacien Titulaire</p>
         </div>
       </div>
