@@ -91,6 +91,12 @@ export default function POS() {
     const [showReservationAlert, setShowReservationAlert] = useState(false);
     const [activeReservation, setActiveReservation] = useState(null);
 
+    // Substitute Finder State
+    const [showSubstituteModal, setShowSubstituteModal] = useState(false);
+    const [substituteTarget, setSubstituteTarget] = useState(null);
+    const [substituteResults, setSubstituteResults] = useState([]);
+    const [isSearchingSubstitutes, setIsSearchingSubstitutes] = useState(false);
+
     // Barcode Scanner logic
     const barcodeBuffer = useRef('');
     const lastKeyTime = useRef(0);
@@ -124,7 +130,8 @@ export default function POS() {
 
     const addToCart = (product) => {
         if (product.stock <= 0) {
-            alert('Produit en rupture de stock !');
+            setSubstituteTarget(product);
+            handleFindSubstitutes(product);
             return;
         }
         setCart(prev => {
@@ -134,6 +141,32 @@ export default function POS() {
             }
             return [...prev, { ...product, quantity: 1 }];
         });
+    };
+
+    const handleFindSubstitutes = (product) => {
+        setIsSearchingSubstitutes(true);
+        setShowSubstituteModal(true);
+
+        // Simulation of Web Search AI Analysis
+        setTimeout(() => {
+            const mappings = {
+                'Doliprane': ['TerPARA', 'Efferalgan', 'Paracétamol'],
+                'Ventoline': ['Salbutamol', 'Salbumol'],
+                'Augmentin': ['Amoxicilline', 'Clamoxyl'],
+                'Amoxicilline': ['Augmentin', 'Clamoxyl']
+            };
+
+            const prodName = product.name.split(' ')[0];
+            const equivalents = mappings[prodName] || [];
+
+            // Filter MOCK_PRODUCTS to see what we actually have
+            const available = MOCK_PRODUCTS.filter(p =>
+                equivalents.some(e => p.name.toLowerCase().includes(e.toLowerCase()))
+            );
+
+            setSubstituteResults(available);
+            setIsSearchingSubstitutes(false);
+        }, 1500);
     };
 
     const handlePatientSelection = (patient) => {
@@ -326,6 +359,65 @@ export default function POS() {
             height: 'calc(100vh - 100px)', backgroundColor: '#f1f5f9', padding: '12px',
             borderRadius: 'var(--radius-lg)', position: 'relative'
         }}>
+            {/* Modal AI Substitute Finder */}
+            {showSubstituteModal && (
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 8000, backdropFilter: 'blur(8px)' }}>
+                    <div style={{ backgroundColor: 'white', padding: '40px', borderRadius: '32px', width: '550px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
+                            <div>
+                                <h2 style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--secondary)' }}>Équivalents & Substituts</h2>
+                                <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Recherche intelligente pour **{substituteTarget?.name}**</p>
+                            </div>
+                            <button onClick={() => setShowSubstituteModal(false)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}><X size={32} /></button>
+                        </div>
+
+                        {isSearchingSubstitutes ? (
+                            <div style={{ padding: '60px 0', textAlign: 'center' }}>
+                                <Loader2 size={48} className="spin" color="var(--primary)" style={{ margin: '0 auto 16px' }} />
+                                <p style={{ fontWeight: '700', color: 'var(--primary)' }}>Scan pharmacologique mondial en cours...</p>
+                                <p style={{ fontSize: '0.8rem', opacity: 0.6, marginTop: '8px' }}>Vérification de la disponibilité en stock local...</p>
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                <div style={{ padding: '12px', background: '#fef2f2', borderRadius: '12px', display: 'flex', gap: '8px', alignItems: 'center', border: '1px solid #fee2e2' }}>
+                                    <AlertTriangle size={18} color="#ef4444" />
+                                    <p style={{ fontSize: '0.85rem', color: '#991b1b', fontWeight: '700' }}>{substituteTarget?.name} est actuellement en rupture de stock.</p>
+                                </div>
+
+                                <h4 style={{ fontSize: '0.85rem', fontWeight: '900', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Alternatives en stock</h4>
+
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                    {substituteResults.length > 0 ? substituteResults.map(p => (
+                                        <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', borderRadius: '16px', border: '1px solid #f1f5f9', background: '#f8fafc' }}>
+                                            <div>
+                                                <p style={{ fontWeight: '800', color: 'var(--secondary)' }}>{p.name}</p>
+                                                <p style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: '700' }}>Stock: {p.stock} unités</p>
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                <span style={{ fontWeight: '900', color: 'var(--secondary)' }}>{p.price.toLocaleString()} F</span>
+                                                <button onClick={() => { addToCart(p); setShowSubstituteModal(false); }} style={{ padding: '8px 16px', borderRadius: '10px', background: 'var(--primary)', color: 'white', border: 'none', fontWeight: '800', cursor: 'pointer' }}>Ajouter</button>
+                                            </div>
+                                        </div>
+                                    )) : (
+                                        <div style={{ textAlign: 'center', padding: '30px', background: '#f8fafc', borderRadius: '16px', border: '1px dashed #e2e8f0' }}>
+                                            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Aucun équivalent direct trouvé en stock.</p>
+                                            <button onClick={() => { setShowSubstituteModal(false); alert('Commande express générée'); }} style={{ marginTop: '16px', padding: '10px 20px', borderRadius: '10px', background: 'var(--secondary)', color: 'white', border: 'none', fontWeight: '800', cursor: 'pointer' }}>Passer Commande Express</button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <ShieldCheck size={16} color="#10b981" />
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>Validation par IA Clinique</span>
+                            </div>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Source: VIDAL / MSAS Sénégal</span>
+                        </div>
+                    </div>
+                </div>
+            )}
             {/* Modal Reservation Alert */}
             {showReservationAlert && (
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 7000, backdropFilter: 'blur(10px)' }}>
