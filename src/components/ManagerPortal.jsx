@@ -14,6 +14,8 @@ export default function ManagerPortal() {
     const [isScanning, setIsScanning] = useState(false);
     const [scannedProduct, setScannedProduct] = useState(null);
     const [physicalCount, setPhysicalCount] = useState('');
+    const [expiryDate, setExpiryDate] = useState('');
+    const [scanMode, setScanMode] = useState('inventory'); // 'inventory' or 'expiry'
     const [scanAnimation, setScanAnimation] = useState(false);
 
     // Mock data for the manager
@@ -179,7 +181,22 @@ export default function ManagerPortal() {
                                     <Scan size={32} color="#10b981" />
                                 </div>
                                 <h3 style={{ fontWeight: '900', fontSize: '1.2rem', marginBottom: '8px' }}>Scanner de Stock</h3>
-                                <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '20px' }}>Pointez le code-barres pour ajuster le stock physique.</p>
+                                <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '20px' }}>Pointez le code-barres pour ajuster le stock ou gérer les dates.</p>
+
+                                <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', background: '#0f172a', padding: '4px', borderRadius: '12px' }}>
+                                    <button
+                                        onClick={() => { setScanMode('inventory'); setScannedProduct(null); }}
+                                        style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: scanMode === 'inventory' ? '#10b981' : 'transparent', color: scanMode === 'inventory' ? 'white' : '#64748b', fontSize: '0.7rem', fontWeight: '800', cursor: 'pointer' }}
+                                    >
+                                        INVENTAIRE
+                                    </button>
+                                    <button
+                                        onClick={() => { setScanMode('expiry'); setScannedProduct(null); }}
+                                        style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: scanMode === 'expiry' ? '#f59e0b' : 'transparent', color: scanMode === 'expiry' ? 'white' : '#64748b', fontSize: '0.7rem', fontWeight: '800', cursor: 'pointer' }}
+                                    >
+                                        PÉREMPTION
+                                    </button>
+                                </div>
 
                                 {!isScanning && !scannedProduct && (
                                     <button
@@ -190,13 +207,13 @@ export default function ManagerPortal() {
                                                 setTimeout(() => {
                                                     setScanAnimation(false);
                                                     setIsScanning(false);
-                                                    setScannedProduct({ id: 1, name: 'Doliprane 1000mg', systemStock: 140, ean: '3400930000012' });
+                                                    setScannedProduct({ id: 1, name: 'Doliprane 1000mg', systemStock: 140, ean: '3400930000012', currentExpiry: '06/2026' });
                                                 }, 1500);
                                             }, 1000);
                                         }}
-                                        style={{ width: '100%', padding: '16px', borderRadius: '16px', background: '#10b981', color: 'white', border: 'none', fontWeight: '900', fontSize: '1rem', cursor: 'pointer' }}
+                                        style={{ width: '100%', padding: '16px', borderRadius: '16px', background: scanMode === 'inventory' ? '#10b981' : '#f59e0b', color: 'white', border: 'none', fontWeight: '900', fontSize: '1rem', cursor: 'pointer', boxShadow: scanMode === 'inventory' ? '0 10px 15px -3px rgba(16, 185, 129, 0.4)' : '0 10px 15px -3px rgba(245, 158, 11, 0.4)' }}
                                     >
-                                        DÉMARRER LE SCAN
+                                        SCANNER PRODUIT
                                     </button>
                                 )}
 
@@ -217,36 +234,67 @@ export default function ManagerPortal() {
                                                 <p style={{ fontSize: '1rem', fontWeight: '900' }}>{scannedProduct.name}</p>
                                                 <p style={{ fontSize: '0.7rem', color: '#64748b' }}>EAN: {scannedProduct.ean}</p>
                                             </div>
-                                            <button onClick={() => { setScannedProduct(null); setPhysicalCount(''); }} style={{ background: 'none', border: 'none', color: '#64748b' }}><X size={20} /></button>
+                                            <button onClick={() => { setScannedProduct(null); setPhysicalCount(''); setExpiryDate(''); }} style={{ background: 'none', border: 'none', color: '#64748b' }}><X size={20} /></button>
                                         </div>
 
                                         <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
-                                            <div style={{ flex: 1, padding: '12px', background: '#1e293b', borderRadius: '12px' }}>
-                                                <p style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: '800' }}>STOCK SYSTÈME</p>
-                                                <p style={{ fontSize: '1.2rem', fontWeight: '900' }}>{scannedProduct.systemStock}</p>
-                                            </div>
-                                            <div style={{ flex: 1, padding: '12px', background: '#1e293b', borderRadius: '12px', border: '2px solid #10b981' }}>
-                                                <p style={{ fontSize: '0.6rem', color: '#10b981', fontWeight: '800' }}>COMPTAGE RÉEL</p>
-                                                <input
-                                                    type="number"
-                                                    value={physicalCount}
-                                                    onChange={(e) => setPhysicalCount(e.target.value)}
-                                                    placeholder="0"
-                                                    style={{ width: '100%', background: 'none', border: 'none', color: 'white', fontSize: '1.2rem', fontWeight: '900', outline: 'none' }}
-                                                />
-                                            </div>
+                                            {scanMode === 'inventory' ? (
+                                                <>
+                                                    <div style={{ flex: 1, padding: '12px', background: '#1e293b', borderRadius: '12px' }}>
+                                                        <p style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: '800' }}>STOCK SYSTÈME</p>
+                                                        <p style={{ fontSize: '1.2rem', fontWeight: '900' }}>{scannedProduct.systemStock}</p>
+                                                    </div>
+                                                    <div style={{ flex: 1, padding: '12px', background: '#1e293b', borderRadius: '12px', border: '2px solid #10b981' }}>
+                                                        <p style={{ fontSize: '0.6rem', color: '#10b981', fontWeight: '800' }}>COMPTAGE RÉEL</p>
+                                                        <input
+                                                            type="number"
+                                                            value={physicalCount}
+                                                            onChange={(e) => setPhysicalCount(e.target.value)}
+                                                            placeholder="0"
+                                                            style={{ width: '100%', background: 'none', border: 'none', color: 'white', fontSize: '1.2rem', fontWeight: '900', outline: 'none' }}
+                                                        />
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <div style={{ flex: 1, padding: '12px', background: '#1e293b', borderRadius: '12px' }}>
+                                                        <p style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: '800' }}>EXP. ACTUELLE</p>
+                                                        <p style={{ fontSize: '1.2rem', fontWeight: '900', color: '#f59e0b' }}>{scannedProduct.currentExpiry}</p>
+                                                    </div>
+                                                    <div style={{ flex: 1, padding: '12px', background: '#1e293b', borderRadius: '12px', border: '2px solid #f59e0b' }}>
+                                                        <p style={{ fontSize: '0.6rem', color: '#f59e0b', fontWeight: '800' }}>NOUVELLE DATE</p>
+                                                        <input
+                                                            type="text"
+                                                            value={expiryDate}
+                                                            onChange={(e) => setExpiryDate(e.target.value)}
+                                                            placeholder="MM/AAAA"
+                                                            style={{ width: '100%', background: 'none', border: 'none', color: 'white', fontSize: '1.1rem', fontWeight: '900', outline: 'none' }}
+                                                        />
+                                                    </div>
+                                                </>
+                                            )}
                                         </div>
 
                                         <button
                                             onClick={() => {
-                                                alert(`Stock de ${scannedProduct.name} mis à jour : ${physicalCount} unités.`);
+                                                if (scanMode === 'inventory') {
+                                                    alert(`Stock de ${scannedProduct.name} mis à jour : ${physicalCount} unités.`);
+                                                } else {
+                                                    alert(`Date de péremption de ${scannedProduct.name} enregistrée : ${expiryDate}. Le produit est marqué pour surveillance.`);
+                                                }
                                                 setScannedProduct(null);
                                                 setPhysicalCount('');
+                                                setExpiryDate('');
                                             }}
-                                            disabled={!physicalCount}
-                                            style={{ width: '100%', padding: '14px', borderRadius: '12px', background: 'white', color: '#0f172a', border: 'none', fontWeight: '900', cursor: 'pointer', opacity: physicalCount ? 1 : 0.5 }}
+                                            disabled={scanMode === 'inventory' ? !physicalCount : !expiryDate}
+                                            style={{
+                                                width: '100%', padding: '14px', borderRadius: '12px',
+                                                background: scanMode === 'inventory' ? 'white' : '#f59e0b', color: scanMode === 'inventory' ? '#0f172a' : 'white', border: 'none',
+                                                fontWeight: '900', cursor: 'pointer',
+                                                opacity: (scanMode === 'inventory' ? physicalCount : expiryDate) ? 1 : 0.5
+                                            }}
                                         >
-                                            VALIDER L'AJUSTEMENT
+                                            {scanMode === 'inventory' ? 'VALIDER L\'AJUSTEMENT' : 'ENREGISTRER LA DATE'}
                                         </button>
                                     </div>
                                 )}
