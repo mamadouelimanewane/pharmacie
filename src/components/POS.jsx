@@ -5,7 +5,7 @@ import {
     Delete, ArrowLeft, History, User, Settings,
     Power, ChevronRight, Hash, Star, Smartphone,
     QrCode, Loader2, CheckCircle2, Barcode, Unlock,
-    Mail, FileText, Download
+    Mail, FileText, Download, Clock, RotateCcw
 } from 'lucide-react';
 import { MOCK_PRODUCTS } from '../data/mockData';
 
@@ -74,7 +74,9 @@ export default function POS() {
     const [autoDrawer, setAutoDrawer] = useState(true);
     const [printOption, setPrintOption] = useState(true);
     const [showReceipt, setShowReceipt] = useState(false);
+    const [showHistory, setShowHistory] = useState(false);
     const [lastSale, setLastSale] = useState(null);
+    const [salesHistory, setSalesHistory] = useState([]);
 
     // Barcode Scanner logic
     const barcodeBuffer = useRef('');
@@ -148,7 +150,8 @@ export default function POS() {
             id: 'TK-' + Math.floor(Math.random() * 9999),
             items: [...cart],
             total: total,
-            date: new Date().toLocaleString(),
+            date: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+            fullDate: new Date().toLocaleString(),
             paymentMethod: type === 'cash' ? 'ESPÈCES' : mobilePayment === 'wave' ? 'WAVE' : 'ORANGE MONEY',
             cashReceived: parseInt(cashAmount) || 0,
             changeDue: type === 'cash' ? (parseInt(cashAmount) - total) : 0
@@ -158,6 +161,7 @@ export default function POS() {
             triggerDrawer();
         }
 
+        setSalesHistory(prev => [saleData, ...prev].slice(0, 50));
         setLastSale(saleData);
         if (printOption) {
             setShowReceipt(true);
@@ -177,6 +181,11 @@ export default function POS() {
         setLastSale(null);
     };
 
+    const reprintTicket = (sale) => {
+        setLastSale(sale);
+        setShowReceipt(true);
+    };
+
     return (
         <div className="pos-tactile" style={{
             display: 'grid',
@@ -188,39 +197,67 @@ export default function POS() {
             borderRadius: 'var(--radius-lg)',
             position: 'relative'
         }}>
+            {/* Modal Historique des Ventes */}
+            {showHistory && (
+                <div style={{
+                    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 4000
+                }}>
+                    <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '20px', width: '600px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                            <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><History size={24} /> Derniers Tickets</h2>
+                            <button onClick={() => setShowHistory(false)} style={{ border: 'none', background: 'none' }}><X size={24} /></button>
+                        </div>
+                        <div style={{ flex: 1, overflowY: 'auto' }}>
+                            {salesHistory.length === 0 ? (
+                                <p style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Aucune vente enregistrée aujourd'hui.</p>
+                            ) : (
+                                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                    <thead>
+                                        <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border)' }}>
+                                            <th style={{ padding: '12px' }}>Heure</th>
+                                            <th style={{ padding: '12px' }}>Ticket</th>
+                                            <th style={{ padding: '12px' }}>Mode</th>
+                                            <th style={{ padding: '12px' }}>Total</th>
+                                            <th style={{ padding: '12px' }}>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {salesHistory.map((sale, i) => (
+                                            <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                                <td style={{ padding: '12px' }}>{sale.date}</td>
+                                                <td style={{ padding: '12px', fontWeight: '600' }}>{sale.id}</td>
+                                                <td style={{ padding: '12px' }}><span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '4px', backgroundColor: '#f1f5f9' }}>{sale.paymentMethod}</span></td>
+                                                <td style={{ padding: '12px', fontWeight: '700' }}>{sale.total.toLocaleString()} F</td>
+                                                <td style={{ padding: '12px' }}>
+                                                    <button onClick={() => reprintTicket(sale)} style={{ border: 'none', background: 'none', color: 'var(--primary)', cursor: 'pointer' }}><Printer size={18} /></button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Modal Ticket de Caisse */}
             {showReceipt && lastSale && (
                 <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: 'rgba(0,0,0,0.5)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 3000
+                    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000
                 }}>
-                    <div style={{
-                        backgroundColor: 'white',
-                        padding: '30px',
-                        borderRadius: '16px',
-                        width: '380px',
-                        boxShadow: 'var(--shadow-lg)',
-                        position: 'relative'
-                    }}>
+                    <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '16px', width: '380px', boxShadow: 'var(--shadow-lg)', position: 'relative' }}>
                         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
                             <h2 style={{ fontSize: '1.2rem', marginBottom: '4px' }}>PHARMACIE DE LA TERRANGA</h2>
                             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Mermoz, Dakar - Sénégal</p>
-                            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Tél: 33 800 00 00</p>
                         </div>
                         <div style={{ borderTop: '1px dashed #ccc', borderBottom: '1px dashed #ccc', padding: '10px 0', marginBottom: '15px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '5px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
                                 <span>Ticket : {lastSale.id}</span>
-                                <span>{lastSale.date}</span>
+                                <span>{lastSale.fullDate}</span>
                             </div>
-                            <p style={{ fontSize: '0.8rem' }}>Caissier : Dr. Wane</p>
                         </div>
                         <div style={{ marginBottom: '15px' }}>
                             {lastSale.items.map((item, i) => (
@@ -239,22 +276,12 @@ export default function POS() {
                                 <span>Mode : {lastSale.paymentMethod}</span>
                                 {lastSale.paymentMethod === 'ESPÈCES' && <span>Reçu : {lastSale.cashReceived.toLocaleString()} F</span>}
                             </div>
-                            {lastSale.changeDue > 0 && (
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'green', fontWeight: '700' }}>
-                                    <span>Rendu Monnaie</span>
-                                    <span>{lastSale.changeDue.toLocaleString()} F</span>
-                                </div>
-                            )}
-                        </div>
-                        <div style={{ textAlign: 'center', fontSize: '0.8rem', marginBottom: '25px' }}>
-                            <p>Merci de votre visite.</p>
-                            <p>Conservez ce ticket pour tout échange.</p>
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                            <button onClick={() => { alert('Impression PDF...'); resetPOS(); }} style={{ padding: '12px', borderRadius: '10px', border: '1px solid var(--primary)', background: 'white', color: 'var(--primary)', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}><Printer size={18} /> IMPRIMER</button>
-                            <button onClick={() => { alert('Envoyé par email !'); resetPOS(); }} style={{ padding: '12px', borderRadius: '10px', border: 'none', background: 'var(--primary)', color: 'white', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}><Mail size={18} /> E-MAIL</button>
+                            <button onClick={() => { alert('Impression...'); setShowReceipt(false); if (salesHistory[0]?.id !== lastSale.id) setLastSale(null); }} style={{ padding: '12px', borderRadius: '10px', border: '1px solid var(--primary)', background: 'white', color: 'var(--primary)', fontWeight: '700' }}><Printer size={18} /> IMPRIMER</button>
+                            <button onClick={() => { alert('Envoyé !'); setShowReceipt(false); if (salesHistory[0]?.id !== lastSale.id) setLastSale(null); }} style={{ padding: '12px', borderRadius: '10px', border: 'none', background: 'var(--primary)', color: 'white', fontWeight: '700' }}><Mail size={18} /> E-MAIL</button>
                         </div>
-                        <button onClick={resetPOS} style={{ width: '100%', marginTop: '10px', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.9rem' }}>Ignorer</button>
+                        <button onClick={resetPOS} style={{ width: '100%', marginTop: '10px', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>Fermer</button>
                     </div>
                 </div>
             )}
@@ -262,21 +289,11 @@ export default function POS() {
             {/* Notification Tiroir */}
             {drawerOpen && (
                 <div style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                    color: 'white',
-                    padding: '30px 50px',
-                    borderRadius: '24px',
-                    zIndex: 2000,
-                    textAlign: 'center',
-                    boxShadow: '0 0 50px rgba(16, 185, 129, 0.4)',
-                    border: '2px solid var(--primary)'
+                    position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                    backgroundColor: 'rgba(15, 23, 42, 0.95)', color: 'white', padding: '30px 50px', borderRadius: '24px', zIndex: 2000, textAlign: 'center'
                 }}>
                     <Unlock size={64} color="var(--primary)" style={{ marginBottom: '16px' }} />
-                    <h2 style={{ color: 'white' }}>TIROIR CAISSE OUVERT</h2>
+                    <h2 style={{ color: 'white' }}>TIROIR OUVERT</h2>
                 </div>
             )}
 
@@ -287,7 +304,7 @@ export default function POS() {
                         <Search size={24} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                         <input
                             type="text"
-                            placeholder="Chercher ou scanner..."
+                            placeholder="Produit ou code-barres..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             style={{ width: '100%', padding: '16px 16px 16px 52px', borderRadius: '12px', border: '2px solid #e2e8f0', outline: 'none', fontSize: '1.1rem' }}
@@ -319,9 +336,12 @@ export default function POS() {
                             <h2 style={{ fontSize: '1.25rem', fontWeight: '700' }}>Caisse N1</h2>
                             <p style={{ fontSize: '0.75rem', opacity: 0.7 }}>Cassier : Dr. Wane</p>
                         </div>
-                        <div style={{ display: 'flex', gap: '6px', flexDirection: 'column' }}>
-                            <button onClick={() => setAutoDrawer(!autoDrawer)} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: autoDrawer ? 'rgba(16, 185, 129, 0.2)' : 'transparent', color: 'white', fontSize: '0.7rem', cursor: 'pointer' }}><Unlock size={12} /> {autoDrawer ? 'AUTO TIROIR' : 'DRAWER MAN'}</button>
-                            <button onClick={() => setPrintOption(!printOption)} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: printOption ? 'rgba(6, 182, 212, 0.2)' : 'transparent', color: 'white', fontSize: '0.7rem', cursor: 'pointer' }}><Printer size={12} /> {printOption ? 'AVEC TICKET' : 'SANS TICKET'}</button>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                            <button onClick={() => setShowHistory(true)} style={{ padding: '10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'transparent', color: 'white', cursor: 'pointer' }}><History size={18} /></button>
+                            <div style={{ display: 'flex', gap: '4px', flexDirection: 'column' }}>
+                                <button onClick={() => setAutoDrawer(!autoDrawer)} style={{ padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: autoDrawer ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255,255,255,0.1)', color: 'white', fontSize: '0.65rem', cursor: 'pointer' }}>TIROIR: {autoDrawer ? 'AUTO' : 'OFF'}</button>
+                                <button onClick={() => setPrintOption(!printOption)} style={{ padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: printOption ? 'rgba(6, 182, 212, 0.3)' : 'rgba(255,255,255,0.1)', color: 'white', fontSize: '0.65rem', cursor: 'pointer' }}>TICKET: {printOption ? 'ON' : 'OFF'}</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -329,10 +349,7 @@ export default function POS() {
                 <div style={{ flex: 1, overflowY: 'auto', padding: '12px' }}>
                     {cart.map(item => (
                         <div key={item.id} style={{ display: 'flex', padding: '12px', borderBottom: '1px solid #f1f5f9' }}>
-                            <div style={{ flex: 1 }}>
-                                <p style={{ fontWeight: '600' }}>{item.name}</p>
-                                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{item.price.toLocaleString()} F x {item.quantity}</p>
-                            </div>
+                            <div style={{ flex: 1 }}><p style={{ fontWeight: '600' }}>{item.name}</p><p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{item.price.toLocaleString()} F x {item.quantity}</p></div>
                             <p style={{ fontWeight: '700' }}>{(item.price * item.quantity).toLocaleString()} F</p>
                         </div>
                     ))}
@@ -343,58 +360,29 @@ export default function POS() {
                         <span style={{ fontSize: '1.2rem', fontWeight: '800' }}>TOTAL</span>
                         <span style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--primary)' }}>{total.toLocaleString()} F</span>
                     </div>
-
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
-                        <button onClick={() => startMobilePayment('wave')} style={{ padding: '12px', borderRadius: '8px', border: '2px solid #1dcad3', background: 'white', cursor: 'pointer', color: '#1dcad3', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}><WaveIcon /> WAVE</button>
-                        <button onClick={() => startMobilePayment('om')} style={{ padding: '12px', borderRadius: '8px', border: '2px solid #FF6600', background: 'white', cursor: 'pointer', color: '#FF6600', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}><OMIcon /> ORANGE</button>
+                        <button onClick={() => startMobilePayment('wave')} style={{ padding: '12px', borderRadius: '8px', border: '2px solid #1dcad3', background: 'white', color: '#1dcad3', fontWeight: 'bold' }}><WaveIcon /> WAVE</button>
+                        <button onClick={() => startMobilePayment('om')} style={{ padding: '12px', borderRadius: '8px', border: '2px solid #FF6600', background: 'white', color: '#FF6600', fontWeight: 'bold' }}><OMIcon /> ORANGE</button>
                     </div>
-
-                    <button
-                        onClick={() => { setShowCheckout(true); setShowNumpad(true); }}
-                        style={{ width: '100%', padding: '18px', borderRadius: '12px', border: 'none', backgroundColor: 'var(--primary)', color: 'white', fontWeight: '800', cursor: 'pointer' }}
-                    >
-                        ENCAISSER ESPÈCES
-                    </button>
+                    <button onClick={() => { setShowCheckout(true); setShowNumpad(true); }} style={{ width: '100%', padding: '16px', borderRadius: '12px', border: 'none', backgroundColor: 'var(--primary)', color: 'white', fontWeight: '800', cursor: 'pointer' }}>ENCAISSER ESPÈCES</button>
                 </div>
 
                 {(showNumpad || showCheckout || mobilePayment) && (
                     <div style={{ position: 'absolute', bottom: '24px', right: '480px', width: '320px', backgroundColor: 'white', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', padding: '24px', zIndex: 100, border: '1px solid var(--border)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                             <h3 style={{ fontWeight: '700' }}>Paiement</h3>
-                            <button onClick={() => { setShowNumpad(false); setShowCheckout(false); setMobilePayment(null); setMobileStatus('idle'); }} style={{ border: 'none', background: 'none', cursor: 'pointer' }}><X size={24} /></button>
+                            <button onClick={() => { setShowNumpad(false); setShowCheckout(false); setMobilePayment(null); setMobileStatus('idle'); }} style={{ border: 'none', background: 'none' }}><X size={24} /></button>
                         </div>
-
                         {showCheckout && (
                             <div style={{ marginBottom: '16px' }}>
                                 <p style={{ textAlign: 'right', fontSize: '1.5rem', fontWeight: '800', color: 'var(--primary)' }}>{cashAmount || '0'} F</p>
                                 {parseInt(cashAmount) >= total && <p style={{ textAlign: 'right', color: 'green', fontWeight: '700' }}>Rendu : {(parseInt(cashAmount) - total).toLocaleString()} F</p>}
                             </div>
                         )}
-
-                        {mobilePayment === 'wave' && (
-                            <div style={{ textAlign: 'center', padding: '20px' }}>
-                                {mobileStatus === 'pending' ? <><QrCode size={100} color="#1dcad3" /><p>Scan QR Wave...</p></> : <p style={{ color: 'green', fontWeight: '700' }}>Paiement Reçu !</p>}
-                            </div>
-                        )}
-
-                        {mobilePayment === 'om' && (
-                            <div style={{ textAlign: 'center' }}>
-                                {mobileStatus === 'idle' ? (
-                                    <>
-                                        <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#FF6600' }}>{phoneNumber || 'Numéro OM'}</p>
-                                        <button disabled={phoneNumber.length < 9} onClick={() => setMobileStatus('pending')} style={{ width: '100%', padding: '12px', background: '#FF6600', color: 'white', border: 'none', borderRadius: '12px', marginTop: '12px', fontWeight: '700' }}>VALIDER PUSH OM</button>
-                                    </>
-                                ) : mobileStatus === 'pending' ? <p>Attente client...</p> : <p style={{ color: 'green', fontWeight: '700' }}>Succès OM !</p>}
-                            </div>
-                        )}
-
-                        {(showCheckout || (mobilePayment === 'om' && mobileStatus === 'idle')) && (
-                            <Numpad onInput={handleNumpadInput} onDelete={() => showCheckout ? setCashAmount(prev => prev.slice(0, -1)) : setPhoneNumber(prev => prev.slice(0, -1))} onClear={() => showCheckout ? setCashAmount('') : setPhoneNumber('')} />
-                        )}
-
-                        {((showCheckout && parseInt(cashAmount) >= total) || mobileStatus === 'success') && (
-                            <button onClick={() => finalizePayment(showCheckout ? 'cash' : 'mobile')} style={{ width: '100%', padding: '16px', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 'bold', marginTop: '16px', fontSize: '1.1rem', cursor: 'pointer' }}>CONCLURE LA VENTE</button>
-                        )}
+                        {mobilePayment === 'wave' && <div style={{ textAlign: 'center', padding: '20px' }}>{mobileStatus === 'pending' ? <><QrCode size={100} color="#1dcad3" /><p>Scan QR...</p></> : <p style={{ color: 'green', fontWeight: '700' }}>Reçu !</p>}</div>}
+                        {mobilePayment === 'om' && <div style={{ textAlign: 'center' }}>{mobileStatus === 'idle' ? <><p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#FF6600' }}>{phoneNumber || 'Numéro OM'}</p><button disabled={phoneNumber.length < 9} onClick={() => setMobileStatus('pending')} style={{ width: '100%', padding: '12px', background: '#FF6600', color: 'white', border: 'none', borderRadius: '8px', marginTop: '12px' }}>VALIDER PUSH</button></> : mobileStatus === 'pending' ? <p>Attente client...</p> : <p style={{ color: 'green', fontWeight: '700' }}>Succès OM !</p>}</div>}
+                        {(showCheckout || (mobilePayment === 'om' && mobileStatus === 'idle')) && <Numpad onInput={handleNumpadInput} onDelete={() => showCheckout ? setCashAmount(prev => prev.slice(0, -1)) : setPhoneNumber(prev => prev.slice(0, -1))} onClear={() => showCheckout ? setCashAmount('') : setPhoneNumber('')} />}
+                        {((showCheckout && parseInt(cashAmount) >= total) || mobileStatus === 'success') && <button onClick={() => finalizePayment(showCheckout ? 'cash' : 'mobile')} style={{ width: '100%', padding: '16px', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 'bold', marginTop: '16px' }}>CONCLURE LA VENTE</button>}
                     </div>
                 )}
             </div>
