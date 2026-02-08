@@ -7,7 +7,8 @@ import {
     Users,
     AlertCircle,
     Clock,
-    ArrowRight
+    ArrowRight,
+    ShoppingCart
 } from 'lucide-react';
 import {
     AreaChart,
