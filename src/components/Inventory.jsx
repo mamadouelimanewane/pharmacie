@@ -14,7 +14,7 @@ export default function Inventory() {
     const [searchTerm, setSearchTerm] = useState('');
     const [showOrderModal, setShowOrderModal] = useState(false);
     const [showReceiveModal, setShowReceiveModal] = useState(false);
-    const [activeView, setActiveView] = useState('logistic'); // 'logistic' or 'physical'
+    const [activeView, setActiveView] = useState('logistic'); // 'logistic', 'physical', 'returns'
     const [physicalInventory, setPhysicalInventory] = useState({});
     const [inventoryLog, setInventoryLog] = useState([]);
     const [isReconciling, setIsReconciling] = useState(false);
@@ -131,6 +131,12 @@ export default function Inventory() {
                         >
                             Comptage Physique
                         </button>
+                        <button
+                            onClick={() => setActiveView('returns')}
+                            style={{ background: 'none', border: 'none', color: activeView === 'returns' ? 'var(--primary)' : 'var(--text-muted)', fontWeight: '800', cursor: 'pointer', borderBottom: activeView === 'returns' ? '2px solid var(--primary)' : '2px solid transparent', paddingBottom: '4px' }}
+                        >
+                            Retours Fournisseurs
+                        </button>
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem' }}>
@@ -195,7 +201,7 @@ export default function Inventory() {
             </div>
 
             {/* Main Content Toggle */}
-            {activeView === 'logistic' ? (
+            {activeView === 'logistic' && (
                 <div className="card" style={{ padding: 0, borderRadius: '24px', overflow: 'hidden' }}>
                     <div style={{ padding: '24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div style={{ position: 'relative', width: '350px' }}>
@@ -235,7 +241,9 @@ export default function Inventory() {
                         </tbody>
                     </table>
                 </div>
-            ) : (
+            )}
+
+            {activeView === 'physical' && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1fr', gap: '2rem' }}>
                     <div className="card" style={{ padding: 0, borderRadius: '24px', overflow: 'hidden' }}>
                         <div style={{ padding: '24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
@@ -322,6 +330,97 @@ export default function Inventory() {
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px' }}>
                                 <button className="glass" style={{ width: '100%', padding: '12px', borderRadius: '10px', textAlign: 'left', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer' }}>📄 Export PDF - Écarts de Stock</button>
                                 <button className="glass" style={{ width: '100%', padding: '12px', borderRadius: '10px', textAlign: 'left', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer' }}>📊 Valorisation des Pertes</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {activeView === 'returns' && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 400px', gap: '2rem' }} className="fade-in">
+                    <div className="card" style={{ padding: 0 }}>
+                        <div style={{ padding: '24px', borderBottom: '1px solid var(--border)', background: '#fffbeb' }}>
+                            <h3 style={{ fontWeight: '900', fontSize: '1.2rem', color: '#92400e', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <ArrowRight size={20} /> Planificateur de Retours Laboratoires
+                            </h3>
+                            <p style={{ fontSize: '0.8rem', color: '#b45309', marginTop: '4px' }}>Séléctionnez les produits à retirer des rayons pour renvoi ou destruction.</p>
+                        </div>
+                        <table className="data-table">
+                            <thead>
+                                <tr>
+                                    <th style={{ padding: '20px' }}>Produit</th>
+                                    <th>Péremption</th>
+                                    <th>Qte Retour</th>
+                                    <th>Motif</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {[
+                                    { id: 201, name: 'Augmentin 500mg', shelf: 'Rayon A1', expiry: '03/2026', stock: 12, price: 5400 },
+                                    { id: 202, name: 'Spasfon Lyoc', shelf: 'Rayon B2', expiry: '02/2026', stock: 8, price: 3200 },
+                                    { id: 203, name: 'Doliprane 500mg', shelf: 'Rayon A4', expiry: 'Expiré', stock: 25, price: 1500 }
+                                ].map(item => (
+                                    <tr key={item.id}>
+                                        <td style={{ padding: '16px 20px' }}>
+                                            <div style={{ fontWeight: '800' }}>{item.name}</div>
+                                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{item.shelf}</div>
+                                        </td>
+                                        <td>
+                                            <span style={{ padding: '4px 8px', borderRadius: '6px', backgroundColor: item.expiry === 'Expiré' ? '#fee2e2' : '#fffbeb', color: item.expiry === 'Expiré' ? '#ef4444' : '#b45309', fontSize: '0.75rem', fontWeight: '900' }}>
+                                                {item.expiry}
+                                            </span>
+                                        </td>
+                                        <td style={{ fontWeight: '900' }}>{item.stock}</td>
+                                        <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Péremption proche</td>
+                                        <td>
+                                            <button style={{ padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', color: 'var(--secondary)', fontWeight: '800', cursor: 'pointer', fontSize: '0.75rem' }}>AJOUTER AU COLIS</button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                        <div className="card" style={{ background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', color: 'white' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+                                <div style={{ padding: '12px', background: 'rgba(255,255,255,0.1)', borderRadius: '14px' }}>
+                                    <Package size={24} color="var(--primary)" />
+                                </div>
+                                <div>
+                                    <h4 style={{ color: 'white', fontWeight: '900', fontSize: '1rem' }}>Colis de Retour #BK-2026</h4>
+                                    <p style={{ fontSize: '0.7rem', opacity: 0.6 }}>Destination : Grossiste Répartiteur</p>
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                                    <span style={{ opacity: 0.7 }}>Produits séléctionnés</span>
+                                    <span style={{ fontWeight: '800' }}>14 articles</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                                    <span style={{ opacity: 0.7 }}>Valeur Marchande (C.A)</span>
+                                    <span style={{ fontWeight: '800' }}>92,400 F</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                                    <span style={{ fontWeight: '900' }}>Total Crédit Attendu</span>
+                                    <span style={{ fontWeight: '950', color: 'var(--primary)' }}>78,500 F</span>
+                                </div>
+                            </div>
+
+                            <button style={{ width: '100%', padding: '16px', borderRadius: '16px', background: 'var(--primary)', color: 'white', border: 'none', fontWeight: '900', cursor: 'pointer', boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.4)' }}>
+                                GÉNÉRER LE BON DE RETOUR
+                            </button>
+                        </div>
+
+                        <div className="card">
+                            <h4 style={{ fontWeight: '900', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <RefreshCcw size={18} color="var(--primary)" /> Suivi des Avoirs
+                            </h4>
+                            <div style={{ padding: '12px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                <p style={{ fontSize: '0.75rem', fontWeight: '800' }}>Avoir #RET-982 (LABOREX)</p>
+                                <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px' }}>En attente de validation • 45,000 F</p>
                             </div>
                         </div>
                     </div>
