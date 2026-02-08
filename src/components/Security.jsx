@@ -25,6 +25,8 @@ export default function Security() {
     const [activeTab, setActiveTab] = useState('users');
     const [isBackingUp, setIsBackingUp] = useState(false);
     const [backupStep, setBackupStep] = useState('');
+    const [twoFactorEnabled, setTwoFactorEnabled] = useState(true);
+    const [show2FAModal, setShow2FAModal] = useState(false);
 
     const runBackup = (type) => {
         setIsBackingUp(true);
@@ -145,23 +147,65 @@ export default function Security() {
                         {activeTab === 'roles' && (
                             <div className="fade-in">
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', marginBottom: '2.5rem' }}>
-                                    <div style={{ padding: '20px', borderRadius: '20px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                                    <div style={{ padding: '20px', borderRadius: '20px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', position: 'relative' }}>
+                                        <div style={{ position: 'absolute', top: '10px', right: '10px' }}>
+                                            <Shield size={16} color="var(--primary)" />
+                                        </div>
                                         <h4 style={{ fontWeight: '900', marginBottom: '10px' }}>ADMIN</h4>
                                         <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '16px' }}>Accès total incluant la comptabilité, les paramètres et la gestion RH.</p>
-                                        <div style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--primary)' }}>● ACCÈS ILLIMITÉ</div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            <div style={{ fontSize: '0.65rem', fontWeight: '800', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '4px' }}>✓ ACCÈS ILLIMITÉ</div>
+                                            <div style={{ fontSize: '0.65rem', fontWeight: '800', color: twoFactorEnabled ? 'var(--primary)' : 'var(--error)', display: 'flex', alignItems: 'center', gap: '4px' }}>{twoFactorEnabled ? '✓ 2FA ACTIVÉ' : '! 2FA REQUIS'}</div>
+                                        </div>
                                     </div>
                                     <div style={{ padding: '20px', borderRadius: '20px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
                                         <h4 style={{ fontWeight: '900', marginBottom: '10px' }}>PHARMACIEN</h4>
                                         <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '16px' }}>Encaissement, ordonnances, stocks et dossiers patients.</p>
-                                        <div style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--primary)' }}>● ACCÈS UNITÉ DE SOINS</div>
+                                        <div style={{ fontSize: '0.65rem', fontWeight: '800', color: 'var(--primary)' }}>✓ ACCÈS UNITÉ DE SOINS</div>
                                     </div>
                                     <div style={{ padding: '20px', borderRadius: '20px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
                                         <h4 style={{ fontWeight: '900', marginBottom: '10px' }}>LOGISTIQUE</h4>
                                         <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '16px' }}>Réception commandes, inventaire, ruptures. Pas d'accès finances.</p>
-                                        <div style={{ fontSize: '0.7rem', fontWeight: '800', color: '#8b5cf6' }}>● ACCÈS STOCK UNIQUEMENT</div>
+                                        <div style={{ fontSize: '0.65rem', fontWeight: '800', color: '#8b5cf6' }}>✓ ACCÈS STOCK UNIQUEMENT</div>
                                     </div>
                                 </div>
-                                <button style={{ padding: '12px 24px', borderRadius: '12px', border: '1px solid var(--primary)', color: 'var(--primary)', background: 'white', fontWeight: '800', fontSize: '0.9rem', cursor: 'pointer' }}>Gérer la Matrice des Permissions</button>
+
+                                <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '24px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
+                                    <h3 style={{ fontSize: '1rem', fontWeight: '900', marginBottom: '1.5rem' }}>Double Authentification (2FA)</h3>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div>
+                                            <p style={{ fontWeight: '800', fontSize: '0.9rem' }}>Sécuriser l'accès Administrateur</p>
+                                            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>Un code de vérification sera envoyé via WhatsApp ou SMS à chaque connexion.</p>
+                                        </div>
+                                        <button
+                                            onClick={() => setTwoFactorEnabled(!twoFactorEnabled)}
+                                            style={{
+                                                width: '50px', height: '26px', borderRadius: '20px',
+                                                backgroundColor: twoFactorEnabled ? 'var(--primary)' : '#cbd5e1',
+                                                border: 'none', position: 'relative', cursor: 'pointer',
+                                                transition: 'all 0.3s'
+                                            }}
+                                        >
+                                            <div style={{
+                                                width: '20px', height: '20px', borderRadius: '50%', background: 'white',
+                                                position: 'absolute', top: '3px', left: twoFactorEnabled ? '27px' : '3px',
+                                                transition: 'all 0.3s'
+                                            }}></div>
+                                        </button>
+                                    </div>
+                                    {twoFactorEnabled && (
+                                        <div style={{ marginTop: '20px', padding: '12px', background: 'white', borderRadius: '12px', border: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <div style={{ padding: '8px', background: '#dcfce7', borderRadius: '8px' }}>
+                                                <Smartphone size={18} color="#16a34a" />
+                                            </div>
+                                            <div>
+                                                <p style={{ fontSize: '0.75rem', fontWeight: '700' }}>Canal de réception : WhatsApp Business</p>
+                                                <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Destinataire : +221 7x xxx xx 00</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                                <button style={{ padding: '12px 24px', borderRadius: '12px', border: '1px solid var(--primary)', color: 'var(--primary)', background: 'white', fontWeight: '800', fontSize: '0.9rem', cursor: 'pointer' }}>Gérer la Matrice Globale des Permissions</button>
                             </div>
                         )}
 
