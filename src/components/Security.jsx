@@ -27,6 +27,8 @@ export default function Security() {
     const [backupStep, setBackupStep] = useState('');
     const [twoFactorEnabled, setTwoFactorEnabled] = useState(true);
     const [show2FAModal, setShow2FAModal] = useState(false);
+    const [panicMode, setPanicMode] = useState(false);
+    const [showPanicConfirm, setShowPanicConfirm] = useState(false);
 
     const runBackup = (type) => {
         setIsBackingUp(true);
@@ -51,6 +53,19 @@ export default function Security() {
                     <p style={{ color: 'var(--text-muted)' }}>Gestion des accès officinaux, droits utilisateurs et redondance multi-cloud.</p>
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <button
+                        onClick={() => setShowPanicConfirm(true)}
+                        style={{
+                            padding: '0.75rem 1.25rem', borderRadius: '12px', border: 'none',
+                            backgroundColor: panicMode ? '#ef4444' : '#fee2e2',
+                            color: panicMode ? 'white' : '#ef4444',
+                            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem',
+                            fontWeight: '900', transition: 'all 0.3s',
+                            boxShadow: panicMode ? '0 0 20px rgba(239, 68, 68, 0.4)' : 'none'
+                        }}
+                    >
+                        <ShieldAlert size={18} /> {panicMode ? 'SYSTÈME VERROUILLÉ' : 'PANIC BUTTON'}
+                    </button>
                     <button className="glass" style={{ padding: '0.75rem 1.25rem', borderRadius: '12px', border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '600' }}>
                         <History size={18} /> Logs d'Audit
                     </button>
@@ -296,10 +311,49 @@ export default function Security() {
                 </div>
             </div>
 
+            {/* Panic Mode Confirmation Modal */}
+            {showPanicConfirm && (
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, backdropFilter: 'blur(10px)' }}>
+                    <div style={{ backgroundColor: 'white', padding: '40px', borderRadius: '32px', width: '500px', textAlign: 'center', border: '2px solid #ef4444' }}>
+                        <div style={{ width: '80px', height: '80px', backgroundColor: '#fee2e2', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+                            <ShieldAlert size={40} color="#ef4444" />
+                        </div>
+                        <h2 style={{ fontSize: '1.8rem', fontWeight: '900', color: '#991b1b', marginBottom: '12px' }}>VERROUILLAGE D'URGENCE</h2>
+                        <p style={{ color: 'var(--text-muted)', marginBottom: '32px', lineHeight: '1.5' }}>
+                            Cette action va **déconnecter instantanément** tous les utilisateurs (sauf vous) et **bloquer tout nouvel accès** jusqu'à levée manuelle.
+                        </p>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                            <button onClick={() => setShowPanicConfirm(false)} style={{ padding: '16px', borderRadius: '16px', border: '1px solid #e2e8f0', background: 'white', fontWeight: '800', cursor: 'pointer' }}>Annuler</button>
+                            <button
+                                onClick={() => { setPanicMode(true); setShowPanicConfirm(false); }}
+                                style={{ padding: '16px', borderRadius: '16px', border: 'none', background: '#ef4444', color: 'white', fontWeight: '900', cursor: 'pointer', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)' }}
+                            >
+                                ACTIVER LE LOCKDOWN
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Panic Mode Active Overlay */}
+            {panicMode && (
+                <div style={{ position: 'fixed', bottom: '40px', left: '50%', transform: 'translateX(-50%)', backgroundColor: '#ef4444', color: 'white', padding: '12px 24px', borderRadius: '100px', display: 'flex', alignItems: 'center', gap: '16px', zIndex: 10000, boxShadow: '0 10px 30px rgba(239, 68, 68, 0.5)', border: '2px solid rgba(255,255,255,0.2)' }}>
+                    <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'white', animation: 'pulse 1s infinite' }}></div>
+                    <span style={{ fontWeight: '900', fontSize: '0.9rem' }}>SYSTÈME EN MODE SÉCURITÉ MAXIMUM (LOCKDOWN)</span>
+                    <button
+                        onClick={() => setPanicMode(false)}
+                        style={{ background: 'white', color: '#ef4444', border: 'none', padding: '6px 16px', borderRadius: '50px', fontWeight: '900', fontSize: '0.75rem', cursor: 'pointer' }}
+                    >
+                        RÉTABLIR LES ACCÈS
+                    </button>
+                </div>
+            )}
+
             <style>{`
         @keyframes progress { from { width: 0%; } to { width: 65%; } }
         .spin { animation: rotate 1.5s linear infinite; }
         @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.5); } 100% { opacity: 1; transform: scale(1); } }
       `}</style>
         </div>
     );
