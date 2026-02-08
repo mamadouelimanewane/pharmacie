@@ -14,7 +14,7 @@ export default function Inventory() {
     const [searchTerm, setSearchTerm] = useState('');
     const [showOrderModal, setShowOrderModal] = useState(false);
     const [showReceiveModal, setShowReceiveModal] = useState(false);
-    const [activeView, setActiveView] = useState('logistic'); // 'logistic', 'physical', 'returns'
+    const [activeView, setActiveView] = useState('logistic'); // 'logistic', 'physical', 'returns', 'destruction'
     const [physicalInventory, setPhysicalInventory] = useState({});
     const [inventoryLog, setInventoryLog] = useState([]);
     const [isReconciling, setIsReconciling] = useState(false);
@@ -116,7 +116,7 @@ export default function Inventory() {
             <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                 <div>
                     <h1 style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--secondary)' }}>
-                        {activeView === 'logistic' ? 'Gestion Logistique' : 'Inventaire Physique'}
+                        {activeView === 'logistic' ? 'Gestion Logistique' : activeView === 'physical' ? 'Inventaire Physique' : activeView === 'returns' ? 'Retours Fournisseurs' : 'Destruction Sécurisée'}
                     </h1>
                     <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
                         <button
@@ -136,6 +136,12 @@ export default function Inventory() {
                             style={{ background: 'none', border: 'none', color: activeView === 'returns' ? 'var(--primary)' : 'var(--text-muted)', fontWeight: '800', cursor: 'pointer', borderBottom: activeView === 'returns' ? '2px solid var(--primary)' : '2px solid transparent', paddingBottom: '4px' }}
                         >
                             Retours Fournisseurs
+                        </button>
+                        <button
+                            onClick={() => setActiveView('destruction')}
+                            style={{ background: 'none', border: 'none', color: activeView === 'destruction' ? 'var(--primary)' : 'var(--text-muted)', fontWeight: '800', cursor: 'pointer', borderBottom: activeView === 'destruction' ? '2px solid var(--primary)' : '2px solid transparent', paddingBottom: '4px' }}
+                        >
+                            Destruction Sécurisée
                         </button>
                     </div>
                 </div>
@@ -421,6 +427,99 @@ export default function Inventory() {
                             <div style={{ padding: '12px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                                 <p style={{ fontSize: '0.75rem', fontWeight: '800' }}>Avoir #RET-982 (LABOREX)</p>
                                 <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px' }}>En attente de validation • 45,000 F</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {activeView === 'destruction' && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2rem' }} className="fade-in">
+                    <div className="card" style={{ padding: 0 }}>
+                        <div style={{ padding: '24px', borderBottom: '1px solid var(--border)', backgroundColor: '#fef2f2' }}>
+                            <h3 style={{ fontWeight: '900', fontSize: '1.2rem', color: '#991b1b', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <Trash2 size={24} /> Mise au Rebut & Destruction
+                            </h3>
+                            <p style={{ fontSize: '0.8rem', color: '#b91c1c', marginTop: '4px' }}>Procédure légale de retrait définitif du stock (Stupéfiants, Périmés, Casses).</p>
+                        </div>
+                        <div style={{ padding: '24px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1.5fr auto', gap: '16px', marginBottom: '24px' }}>
+                                <input type="text" placeholder="Sélectionner le produit..." style={{ padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
+                                <input type="number" placeholder="Qté" style={{ padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }} />
+                                <select style={{ padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                                    <option>Motif: Périmé</option>
+                                    <option>Motif: Stupéfiant</option>
+                                    <option>Motif: Casse/Fuite</option>
+                                    <option>Motif: Rappel Lot</option>
+                                </select>
+                                <button style={{ padding: '12px 24px', borderRadius: '10px', border: 'none', backgroundColor: '#ef4444', color: 'white', fontWeight: '800', cursor: 'pointer' }}>AJOUTER</button>
+                            </div>
+
+                            <table className="data-table" style={{ border: '1px solid #fee2e2' }}>
+                                <thead>
+                                    <tr>
+                                        <th>Produit</th>
+                                        <th>Qté</th>
+                                        <th>Motif</th>
+                                        <th>Valeur</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr style={{ backgroundColor: '#fffafa' }}>
+                                        <td style={{ fontWeight: '700' }}>Morphine 10mg Amp.</td>
+                                        <td>5 units</td>
+                                        <td><span style={{ color: '#ef4444', fontWeight: '800' }}>STUPÉFIANT</span></td>
+                                        <td style={{ fontWeight: '800' }}>12,500 F</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                        <div className="card" style={{ border: '2px solid #ef4444' }}>
+                            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+                                <ShieldCheck size={48} color="#ef4444" style={{ marginBottom: '16px' }} />
+                                <h4 style={{ fontWeight: '950', fontSize: '1.1rem', color: '#991b1b' }}>CERTIFICAT DE DESTRUCTION</h4>
+                                <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Conforme aux normes sanitaires & légales</p>
+                            </div>
+
+                            <div style={{ border: '1px dashed #ef4444', padding: '16px', borderRadius: '12px', backgroundColor: '#fff5f5', marginBottom: '20px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '8px' }}>
+                                    <span style={{ fontWeight: '700' }}>Date :</span>
+                                    <span>{new Date().toLocaleDateString()}</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '8px' }}>
+                                    <span style={{ fontWeight: '700' }}>Responsable :</span>
+                                    <span>Dr. Eliman Wane</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '8px' }}>
+                                    <span style={{ fontWeight: '700' }}>Total Articles :</span>
+                                    <span style={{ fontWeight: '800' }}>5 unités</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
+                                    <span style={{ fontWeight: '700' }}>Status :</span>
+                                    <span style={{ color: '#ef4444', fontWeight: '900' }}>EN ATTENTE DE SCELLÉ</span>
+                                </div>
+                            </div>
+
+                            <button onClick={() => alert("Certificat généré et transmis aux autorités compétentes.")} style={{ width: '100%', padding: '16px', borderRadius: '16px', backgroundColor: '#991b1b', color: 'white', border: 'none', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                <FileText size={20} /> GÉNÉRER LE PV DE DESTRUCTION
+                            </button>
+                        </div>
+
+                        <div className="card">
+                            <h4 style={{ fontWeight: '900', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <History size={18} /> Registre des Destructions
+                            </h4>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <div style={{ padding: '10px', borderRadius: '10px', background: '#f8fafc', fontSize: '0.75rem', border: '1px solid #e2e8f0' }}>
+                                    <div style={{ fontWeight: '800' }}>#PV-2026-001</div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', marginTop: '4px' }}>
+                                        <span>12/01/2026</span>
+                                        <span style={{ color: 'var(--success)', fontWeight: '800' }}>✓ ARCHIVÉ</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
