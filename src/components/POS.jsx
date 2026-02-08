@@ -1,18 +1,72 @@
-import React, { useState } from 'react';
-import { Search, Plus, Minus, Trash2, CreditCard, Banknote, ShieldCheck, Printer, Scan, ShoppingCart } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import {
+    Search, Plus, Minus, Trash2, CreditCard, Banknote,
+    ShieldCheck, Printer, Scan, ShoppingCart, X,
+    Delete, ArrowLeft, History, User, Settings,
+    Power, ChevronRight, Hash, Star
+} from 'lucide-react';
 import { MOCK_PRODUCTS } from '../data/mockData';
+
+const CATEGORIES = ['💊 Tous', '🩺 Antalgique', '🔬 Antibiotique', '🧴 ORL', '🍵 Complément', '🧼 Hygiène'];
+
+const Numpad = ({ onInput, onDelete, onClear }) => {
+    const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', 'DEL'];
+    return (
+        <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: '8px',
+            backgroundColor: '#f1f5f9',
+            padding: '12px',
+            borderRadius: 'var(--radius-md)'
+        }}>
+            {keys.map(key => (
+                <button
+                    key={key}
+                    onClick={() => {
+                        if (key === 'C') onClear();
+                        else if (key === 'DEL') onDelete();
+                        else onInput(key);
+                    }}
+                    style={{
+                        padding: '16px',
+                        fontSize: '1.25rem',
+                        fontWeight: '600',
+                        borderRadius: '8px',
+                        border: '1px solid var(--border)',
+                        backgroundColor: (key === 'C' || key === 'DEL') ? '#fee2e2' : 'white',
+                        color: (key === 'C' || key === 'DEL') ? 'var(--error)' : 'var(--secondary)',
+                        cursor: 'pointer',
+                        boxShadow: 'var(--shadow-sm)',
+                        transition: 'transform 0.1s'
+                    }}
+                    onMouseDown={(e) => e.target.style.transform = 'scale(0.95)'}
+                    onMouseUp={(e) => e.target.style.transform = 'scale(1)'}
+                >
+                    {key}
+                </button>
+            ))}
+        </div>
+    );
+};
 
 export default function POS() {
     const [cart, setCart] = useState([]);
     const [search, setSearch] = useState('');
+    const [activeCategory, setActiveCategory] = useState('💊 Tous');
+    const [showNumpad, setShowNumpad] = useState(false);
+    const [selectedItem, setSelectedItem] = useState(null);
+    const [cashAmount, setCashAmount] = useState('');
+    const [showCheckout, setShowCheckout] = useState(false);
 
     const total = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
     const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
 
-    const filteredProducts = MOCK_PRODUCTS.filter(p =>
-        p.name.toLowerCase().includes(search.toLowerCase()) ||
-        p.code.includes(search)
-    ).slice(0, 8);
+    const filteredProducts = MOCK_PRODUCTS.filter(p => {
+        const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.code.includes(search);
+        const matchesCat = activeCategory === '💊 Tous' || p.category === activeCategory.substring(3);
+        return matchesSearch && matchesCat;
+    });
 
     const addToCart = (product) => {
         setCart(prev => {
@@ -24,9 +78,7 @@ export default function POS() {
         });
     };
 
-    const removeFromCart = (id) => {
-        setCart(prev => prev.filter(item => item.id !== id));
-    };
+    const removeFromCart = (id) => setCart(prev => prev.filter(item => item.id !== id));
 
     const updateQuantity = (id, delta) => {
         setCart(prev => prev.map(item => {
@@ -38,153 +90,349 @@ export default function POS() {
         }));
     };
 
+    const handleNumpadInput = (val) => {
+        if (showCheckout) {
+            setCashAmount(prev => prev + val);
+        } else if (selectedItem) {
+            setCart(prev => prev.map(item =>
+                item.id === selectedItem ? { ...item, quantity: parseInt((item.quantity + val).toString().slice(-4)) || 1 } : item
+            ));
+        }
+    };
+
+    const changeDue = parseInt(cashAmount) - total;
+
     return (
-        <div className="pos" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 400px', gap: '1.5rem', height: 'calc(100vh - 120px)' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem 1.5rem' }}>
+        <div className="pos-tactile" style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 450px',
+            gap: '12px',
+            height: 'calc(100vh - 100px)',
+            backgroundColor: '#f1f5f9',
+            padding: '12px',
+            borderRadius: 'var(--radius-lg)'
+        }}>
+            {/* Colonne de Gauche : Catalogue Produit */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', overflow: 'hidden' }}>
+                {/* Barre Supérieure Tactile */}
+                <div style={{
+                    display: 'flex',
+                    gap: '12px',
+                    padding: '12px',
+                    backgroundColor: 'white',
+                    borderRadius: 'var(--radius-md)',
+                    boxShadow: 'var(--shadow-sm)'
+                }}>
                     <div style={{ position: 'relative', flex: 1 }}>
-                        <Search size={20} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                        <Search size={24} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                         <input
                             type="text"
-                            placeholder="Rechercher un produit (Nom, CIP, Code-barres)..."
+                            placeholder="Rechercher ou scanner un produit..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             style={{
                                 width: '100%',
-                                padding: '0.75rem 0.75rem 0.75rem 2.5rem',
-                                borderRadius: 'var(--radius-md)',
-                                border: '1px solid var(--border)',
+                                padding: '16px 16px 16px 52px',
+                                borderRadius: '12px',
+                                border: '2px solid #e2e8f0',
                                 outline: 'none',
-                                fontSize: '1rem'
+                                fontSize: '1.1rem',
+                                backgroundColor: '#f8fafc'
                             }}
                         />
                     </div>
                     <button style={{
+                        padding: '0 24px',
+                        backgroundColor: 'var(--primary)',
+                        color: 'white',
+                        borderRadius: '12px',
+                        border: 'none',
+                        fontWeight: '700',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '0.5rem',
-                        padding: '0.75rem 1.5rem',
-                        backgroundColor: 'var(--secondary)',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: 'var(--radius-md)',
+                        gap: '8px',
                         cursor: 'pointer'
                     }}>
-                        <Scan size={20} /> Scanner
+                        <Scan size={24} /> SCANNER
                     </button>
                 </div>
 
-                <div className="card" style={{ flex: 1, overflowY: 'auto' }}>
-                    <h3 style={{ marginBottom: '1.5rem' }}>{search ? 'Résultats de recherche' : 'Produits fréquents'}</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-                        {filteredProducts.map(product => (
-                            <button
-                                key={product.id}
-                                onClick={() => addToCart(product)}
-                                style={{
-                                    padding: '1rem',
-                                    borderRadius: 'var(--radius-md)',
-                                    border: '1px solid var(--border)',
-                                    backgroundColor: 'white',
-                                    textAlign: 'left',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s ease',
-                                    boxShadow: 'var(--shadow-sm)'
-                                }}
-                            >
-                                <p style={{ fontWeight: '600', marginBottom: '0.5rem' }}>{product.name}</p>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>{product.price.toLocaleString()} FCFA</span>
-                                    <span style={{ fontSize: '0.75rem', color: product.status === 'Critique' ? 'var(--error)' : 'var(--text-muted)' }}>Stock: {product.stock}</span>
-                                </div>
-                            </button>
-                        ))}
-                    </div>
+                {/* Catégories (Scroll horizontal Tactile) */}
+                <div style={{
+                    display: 'flex',
+                    gap: '8px',
+                    overflowX: 'auto',
+                    padding: '4px 0',
+                    scrollbarWidth: 'none'
+                }}>
+                    {CATEGORIES.map(cat => (
+                        <button
+                            key={cat}
+                            onClick={() => setActiveCategory(cat)}
+                            style={{
+                                padding: '12px 24px',
+                                borderRadius: '100px',
+                                border: 'none',
+                                backgroundColor: activeCategory === cat ? 'var(--secondary)' : 'white',
+                                color: activeCategory === cat ? 'white' : 'var(--text-main)',
+                                fontWeight: '600',
+                                whiteSpace: 'nowrap',
+                                cursor: 'pointer',
+                                boxShadow: 'var(--shadow-sm)',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            {cat}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Grille de Produits Tactile */}
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+                    gap: '12px',
+                    overflowY: 'auto',
+                    padding: '4px'
+                }}>
+                    {filteredProducts.map(p => (
+                        <button
+                            key={p.id}
+                            onClick={() => addToCart(p)}
+                            style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                padding: '20px 12px',
+                                backgroundColor: 'white',
+                                borderRadius: '16px',
+                                border: '1px solid #e2e8f0',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                position: 'relative',
+                                boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
+                            }}
+                            onMouseDown={(e) => e.target.style.transform = 'translateY(2px)'}
+                            onMouseUp={(e) => e.target.style.transform = 'translateY(0)'}
+                        >
+                            <div style={{
+                                width: '48px',
+                                height: '48px',
+                                backgroundColor: '#f1f5f9',
+                                borderRadius: '12px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                marginBottom: '12px',
+                                color: 'var(--primary)'
+                            }}>
+                                <Plus size={24} />
+                            </div>
+                            <span style={{ fontWeight: '700', fontSize: '0.9rem', textAlign: 'center', marginBottom: '8px', color: 'var(--secondary)' }}>{p.name}</span>
+                            <span style={{ fontWeight: '800', color: 'var(--primary)', fontSize: '1rem' }}>{p.price.toLocaleString()} F</span>
+                            {p.stock <= p.minStock && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '8px',
+                                    right: '8px',
+                                    width: '8px',
+                                    height: '8px',
+                                    backgroundColor: 'var(--error)',
+                                    borderRadius: '50%'
+                                }} />
+                            )}
+                        </button>
+                    ))}
                 </div>
             </div>
 
-            <div className="card" style={{ display: 'flex', flexDirection: 'column', padding: '1.5rem 0' }}>
-                <div style={{ padding: '0 1.5rem 1rem', borderBottom: '1px solid var(--border)' }}>
-                    <h3 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        Panier <span style={{ backgroundColor: 'var(--primary-light)', color: 'var(--primary)', padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem' }}>{totalItems} articles</span>
-                    </h3>
+            {/* Colonne de Droite : Panier et Caisse */}
+            <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                backgroundColor: 'white',
+                borderRadius: 'var(--radius-md)',
+                overflow: 'hidden',
+                boxShadow: 'var(--shadow-md)'
+            }}>
+                <div style={{ padding: '20px', backgroundColor: 'var(--secondary)', color: 'white' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <h2 style={{ fontSize: '1.25rem', fontWeight: '700' }}>Caisse N°1</h2>
+                            <p style={{ fontSize: '0.75rem', opacity: 0.7 }}>Cassier : Dr. Wane</p>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                            <p style={{ fontSize: '0.75rem', opacity: 0.7 }}>Aujourd'hui</p>
+                            <p style={{ fontWeight: '600' }}>08 Fév. 2026</p>
+                        </div>
+                    </div>
                 </div>
 
-                <div style={{ flex: 1, overflowY: 'auto', padding: '1rem 1.5rem' }}>
+                {/* Liste des articles du panier */}
+                <div style={{ flex: 1, overflowY: 'auto', padding: '12px' }}>
                     {cart.length === 0 ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)' }}>
-                            <ShoppingCart size={48} opacity={0.2} style={{ marginBottom: '1rem' }} />
-                            <p>Le panier est vide</p>
+                        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', opacity: 0.5 }}>
+                            <ShoppingCart size={64} strokeWidth={1} style={{ marginBottom: '16px' }} />
+                            <p style={{ fontWeight: '600' }}>Aucun article encaissé</p>
                         </div>
                     ) : (
-                        <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             {cart.map(item => (
-                                <li key={item.id} style={{ display: 'flex', gap: '0.75rem', paddingBottom: '1rem', borderBottom: '1px solid #f1f5f9' }}>
+                                <div
+                                    key={item.id}
+                                    onClick={() => setSelectedItem(item.id)}
+                                    style={{
+                                        display: 'flex',
+                                        padding: '16px',
+                                        borderRadius: '12px',
+                                        backgroundColor: selectedItem === item.id ? '#f0fdf4' : '#f8fafc',
+                                        border: selectedItem === item.id ? '2px solid var(--primary)' : '2px solid transparent',
+                                        cursor: 'pointer'
+                                    }}
+                                >
                                     <div style={{ flex: 1 }}>
-                                        <p style={{ fontWeight: '500', fontSize: '0.875rem' }}>{item.name}</p>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                <button onClick={() => updateQuantity(item.id, -1)} style={{ padding: '2px', borderRadius: '4px', border: '1px solid var(--border)', background: 'none', cursor: 'pointer' }}><Minus size={14} /></button>
-                                                <span style={{ fontSize: '0.875rem', minWidth: '20px', textAlign: 'center' }}>{item.quantity}</span>
-                                                <button onClick={() => updateQuantity(item.id, 1)} style={{ padding: '2px', borderRadius: '4px', border: '1px solid var(--border)', background: 'none', cursor: 'pointer' }}><Plus size={14} /></button>
-                                            </div>
-                                            <span style={{ fontWeight: '600' }}>{(item.price * item.quantity).toLocaleString()} FCFA</span>
-                                        </div>
+                                        <p style={{ fontWeight: '700', color: 'var(--secondary)', marginBottom: '4px' }}>{item.name}</p>
+                                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                            {item.price.toLocaleString()} F × {item.quantity}
+                                        </p>
                                     </div>
-                                    <button onClick={() => removeFromCart(item.id)} style={{ color: 'var(--error)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}>
-                                        <Trash2 size={16} />
-                                    </button>
-                                </li>
+                                    <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px' }}>
+                                        <p style={{ fontWeight: '800', color: 'var(--secondary)' }}>{(item.price * item.quantity).toLocaleString()} F</p>
+                                        {selectedItem === item.id && (
+                                            <div style={{ display: 'flex', gap: '4px' }}>
+                                                <button onClick={(e) => { e.stopPropagation(); updateQuantity(item.id, -1); }} style={{ width: '28px', height: '28px', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: 'white' }}><Minus size={14} /></button>
+                                                <button onClick={(e) => { e.stopPropagation(); updateQuantity(item.id, 1); }} style={{ width: '28px', height: '28px', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: 'white' }}><Plus size={14} /></button>
+                                                <button onClick={(e) => { e.stopPropagation(); removeFromCart(item.id); }} style={{ width: '28px', height: '28px', borderRadius: '6px', border: 'none', backgroundColor: '#fee2e2', color: 'var(--error)' }}><Trash2 size={14} /></button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             ))}
-                        </ul>
+                        </div>
                     )}
                 </div>
 
-                <div style={{ padding: '1.5rem', borderTop: '2px dashed var(--border)', backgroundColor: '#f8fafc' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
-                        <span style={{ color: 'var(--text-muted)' }}>Sous-total</span>
-                        <span>{(total * 0.9).toLocaleString()} FCFA</span>
+                {/* Section Totaux et Paiement Tactile */}
+                <div style={{ padding: '20px', borderTop: '2px dashed #f1f5f9', backgroundColor: '#f8fafc' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '1rem' }}>
+                        <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>Articles ({totalItems})</span>
+                        <span style={{ fontWeight: '600' }}>{total.toLocaleString()} FCFA</span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', fontSize: '0.875rem' }}>
-                        <span style={{ color: 'var(--text-muted)' }}>TVA (10% & 2.1%)</span>
-                        <span>{(total * 0.1).toLocaleString()} FCFA</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-                        <span style={{ fontWeight: '700', fontSize: '1.25rem' }}>Total à payer</span>
-                        <span style={{ fontWeight: '700', fontSize: '1.25rem', color: 'var(--primary)' }}>{total.toLocaleString()} FCFA</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+                        <span style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--secondary)' }}>TOTAL</span>
+                        <span style={{ fontSize: '1.75rem', fontWeight: '900', color: 'var(--primary)' }}>{total.toLocaleString()} FCFA</span>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
-                        <button style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', backgroundColor: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                            <CreditCard size={18} /> Carte
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+                        <button
+                            onClick={() => { setShowCheckout(true); setShowNumpad(true); }}
+                            style={{
+                                gridColumn: 'span 4',
+                                padding: '20px',
+                                borderRadius: '16px',
+                                border: 'none',
+                                backgroundColor: 'var(--primary)',
+                                color: 'white',
+                                fontWeight: '800',
+                                fontSize: '1.25rem',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '12px',
+                                boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.3)'
+                            }}
+                        >
+                            <ShieldCheck size={28} /> ENCAISSER
                         </button>
-                        <button style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', backgroundColor: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                            <Banknote size={18} /> Espèces
+                        <button
+                            onClick={() => setShowNumpad(!showNumpad)}
+                            style={{ padding: '15px', borderRadius: '12px', border: '1px solid #cbd5e1', backgroundColor: 'white', cursor: 'pointer' }}
+                        >
+                            <Hash size={24} color="var(--secondary)" />
+                        </button>
+                        <button style={{ padding: '15px', borderRadius: '12px', border: '1px solid #cbd5e1', backgroundColor: 'white', cursor: 'pointer' }}>
+                            <Printer size={24} color="var(--secondary)" />
+                        </button>
+                        <button style={{ padding: '15px', borderRadius: '12px', border: '1px solid #cbd5e1', backgroundColor: 'white', cursor: 'pointer' }}>
+                            <History size={24} color="var(--secondary)" />
+                        </button>
+                        <button
+                            onClick={() => setCart([])}
+                            style={{ padding: '15px', borderRadius: '12px', border: 'none', backgroundColor: '#fee2e2', cursor: 'pointer' }}
+                        >
+                            <Trash2 size={24} color="var(--error)" />
                         </button>
                     </div>
-
-                    <button style={{
-                        width: '100%',
-                        padding: '1rem',
-                        borderRadius: 'var(--radius-md)',
-                        backgroundColor: 'var(--primary)',
-                        color: 'white',
-                        border: 'none',
-                        fontWeight: '600',
-                        fontSize: '1rem',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '0.75rem',
-                        boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)'
-                    }}>
-                        <ShieldCheck size={20} /> Valider la Vente
-                    </button>
-                    <button style={{ width: '100%', marginTop: '0.75rem', background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '0.875rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                        <Printer size={16} /> Imprimer Ticket
-                    </button>
                 </div>
+
+                {/* Overlay Tactile : Pave Numérique / Encaissement */}
+                {(showNumpad || showCheckout) && (
+                    <div style={{
+                        position: 'absolute',
+                        bottom: '24px',
+                        right: '480px',
+                        width: '320px',
+                        backgroundColor: 'white',
+                        borderRadius: '24px',
+                        boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+                        padding: '20px',
+                        border: '1px solid var(--border)',
+                        zIndex: 100
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                            <h3 style={{ fontWeight: '700' }}>{showCheckout ? 'Encaissement Espèces' : 'Pave Numérique'}</h3>
+                            <button onClick={() => { setShowNumpad(false); setShowCheckout(false); setCashAmount(''); }} style={{ border: 'none', background: 'none' }}><X size={24} /></button>
+                        </div>
+
+                        {showCheckout && (
+                            <div style={{ marginBottom: '16px' }}>
+                                <div style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', textAlign: 'right', marginBottom: '8px' }}>
+                                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Montant Reçu</p>
+                                    <p style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--primary)' }}>{cashAmount || '0'} F</p>
+                                </div>
+                                {parseInt(cashAmount) >= total && (
+                                    <div style={{ backgroundColor: '#f0fdf4', padding: '16px', borderRadius: '12px', textAlign: 'right' }}>
+                                        <p style={{ fontSize: '0.75rem', color: '#15803d' }}>Rendu Monnaie</p>
+                                        <p style={{ fontSize: '1.5rem', fontWeight: '800', color: '#15803d' }}>{changeDue.toLocaleString()} F</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        <Numpad
+                            onInput={handleNumpadInput}
+                            onDelete={() => showCheckout ? setCashAmount(prev => prev.slice(0, -1)) : null}
+                            onClear={() => showCheckout ? setCashAmount('') : null}
+                        />
+
+                        {showCheckout && parseInt(cashAmount) >= total && (
+                            <button
+                                onClick={() => {
+                                    setCart([]);
+                                    setShowCheckout(false);
+                                    setShowNumpad(false);
+                                    setCashAmount('');
+                                    alert('Vente validée ! Impression du ticket...');
+                                }}
+                                style={{
+                                    width: '100%',
+                                    marginTop: '16px',
+                                    padding: '16px',
+                                    backgroundColor: 'var(--primary)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '12px',
+                                    fontWeight: '700',
+                                    fontSize: '1.1rem'
+                                }}
+                            >
+                                FINALISER LA VENTE
+                            </button>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );
