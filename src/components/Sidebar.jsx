@@ -11,7 +11,8 @@ import {
   Activity,
   UserCircle,
   Smartphone,
-  Cpu
+  Cpu,
+  Brain
 } from 'lucide-react';
 
 const navItems = [
@@ -20,6 +21,7 @@ const navItems = [
   { icon: Smartphone, label: 'Click & Collect', id: 'ecommerce' },
   { icon: Package, label: 'Gestion des Stocks', id: 'inventory' },
   { icon: Cpu, label: 'Automate / Robot', id: 'automation' },
+  { icon: Brain, label: 'Intelligence Artificielle', id: 'ai' },
   { icon: FileText, label: 'Ordonnances', id: 'prescriptions' },
   { icon: Users, label: 'Patients', id: 'patients' },
   { icon: Activity, label: 'Finances / Tiers-Payant', id: 'finances' },
