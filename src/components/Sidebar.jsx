@@ -14,7 +14,11 @@ import {
   Cpu,
   Brain,
   Shield,
-  Lock
+  Lock,
+  Thermometer,
+  Zap,
+  Radio,
+  Heart
 } from 'lucide-react';
 
 const navItems = [
@@ -23,21 +27,22 @@ const navItems = [
   { icon: Smartphone, label: 'Click & Collect', id: 'ecommerce' },
   { icon: Package, label: 'Gestion des Stocks', id: 'inventory' },
   { icon: Cpu, label: 'Automate / Robot', id: 'automation' },
+  { icon: Radio, label: 'Centre d\'AI Automation', id: 'automation-center' },
   { icon: Brain, label: 'Intelligence Artificielle', id: 'ai' },
-  { icon: Shield, label: 'Mutuelles / Remboursements', id: 'mutuelles' },
+  { icon: Heart, label: 'Patients & Observance', id: 'patients' },
+  { icon: Shield, label: 'Mutuelles / Tiers-Payant', id: 'mutuelles' },
   { icon: FileText, label: 'Ordonnances', id: 'prescriptions' },
-  { icon: Users, label: 'Patients', id: 'patients' },
   { icon: Activity, label: 'Finances / Reporting', id: 'finances' },
-  { icon: Users, label: 'Planning / RH', id: 'staff' },
-  { icon: Smartphone, label: 'Portail Manager (Mobile)', id: 'manager-portal' },
-  { icon: Lock, label: 'Sécurité & Sauvegardes', id: 'security' },
+  { icon: Users, label: 'RH & Planning', id: 'staff' },
+  { icon: Thermometer, label: 'Sécurité Sanitaire (IoT)', id: 'sanitary-security' },
+  { icon: Lock, label: 'Sécurité Informatique', id: 'security' },
   { icon: Settings, label: 'Paramètres', id: 'settings' },
 ];
 
 export default function Sidebar({ activeTab, setActiveTab }) {
   return (
     <div className="sidebar" style={{
-      width: '280px',
+      width: '300px',
       height: '100vh',
       backgroundColor: 'var(--secondary)',
       color: 'white',
@@ -45,7 +50,8 @@ export default function Sidebar({ activeTab, setActiveTab }) {
       flexDirection: 'column',
       padding: '1.5rem',
       position: 'sticky',
-      top: 0
+      top: 0,
+      overflowY: 'auto'
     }}>
       <div className="logo" style={{
         display: 'flex',
@@ -68,12 +74,12 @@ export default function Sidebar({ activeTab, setActiveTab }) {
         </div>
         <div>
           <h2 style={{ color: 'white', fontSize: '1.25rem', marginBottom: '-4px' }}>PharmaElite</h2>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Pro Management System</span>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Pro Management ERP</span>
         </div>
       </div>
 
       <nav style={{ flex: 1 }}>
-        <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
           {navItems.map((item) => (
             <li key={item.id}>
               <button
@@ -83,19 +89,19 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '1rem',
-                  padding: '0.875rem 1rem',
-                  borderRadius: 'var(--radius-md)',
+                  padding: '0.75rem 1rem',
+                  borderRadius: '12px',
                   border: 'none',
                   backgroundColor: activeTab === item.id ? 'var(--primary)' : 'transparent',
                   color: 'white',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
                   textAlign: 'left',
-                  fontSize: '0.925rem',
-                  fontWeight: activeTab === item.id ? '600' : '400'
+                  fontSize: '0.9rem',
+                  fontWeight: activeTab === item.id ? '900' : '400'
                 }}
               >
-                <item.icon size={20} opacity={activeTab === item.id ? 1 : 0.7} />
+                <item.icon size={18} opacity={activeTab === item.id ? 1 : 0.7} />
                 {item.label}
               </button>
             </li>
@@ -122,9 +128,9 @@ export default function Sidebar({ activeTab, setActiveTab }) {
         }}>
           <UserCircle size={24} />
         </div>
-        <div style={{ flex: 1 }}>
-          <p style={{ fontSize: '0.875rem', fontWeight: '600' }}>Dr. Mamadou Elimane Wane</p>
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Pharmacien Titulaire</p>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ fontSize: '0.8rem', fontWeight: '900', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Dr. Mamadou Elimane Wane</p>
+          <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Pharmacien Titulaire</p>
         </div>
       </div>
     </div>

@@ -78,8 +78,9 @@ export default function Dashboard() {
                 </div>
             </header>
 
-            <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '2.5rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
                 <StatCard title="Chiffre d'Affaires" value="1 845 200 F" icon={DollarSign} trend={+12.5} color="var(--primary)" subtitle="82% via Tiers-Payant" />
+                <StatCard title="Observance IA" value="84%" icon={Activity} trend={+2.4} color="#10b981" subtitle="Fidélité Thérapeutique" />
                 <StatCard title="Numérisations SCOR" value="48" icon={Scan} trend={+24.0} color="#8b5cf6" subtitle="100% conformité IA" />
                 <StatCard title="Ruptures Notifiées" value="14" icon={MessageCircle} trend={+18.2} color="#0ea5e9" subtitle="Conversion : 86%" />
                 <StatCard title="Alertes Stock" value="6" icon={AlertCircle} trend={-15.0} color="#f59e0b" subtitle="Livraison COPHASE à 16h" />

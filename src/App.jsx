@@ -14,6 +14,8 @@ import AIAssistant from './components/AIAssistant';
 import Mutuelles from './components/Mutuelles';
 import ManagerPortal from './components/ManagerPortal';
 import Security from './components/Security';
+import SanitarySecurity from './components/SanitarySecurity';
+import AutomationCenter from './components/AutomationCenter';
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -30,6 +32,8 @@ function App() {
         return <Inventory />;
       case 'automation':
         return <Automation />;
+      case 'automation-center':
+        return <AutomationCenter />;
       case 'ai':
         return <AIAssistant />;
       case 'mutuelles':
@@ -48,6 +52,8 @@ function App() {
         return <ManagerPortal />;
       case 'security':
         return <Security />;
+      case 'sanitary-security':
+        return <SanitarySecurity />;
       default:
         return <Dashboard />;
     }
