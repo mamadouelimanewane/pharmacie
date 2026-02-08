@@ -73,6 +73,8 @@ export default function POS() {
     const [selectedPatient, setSelectedPatient] = useState(null);
     const [lastSale, setLastSale] = useState(null);
     const [salesHistory, setSalesHistory] = useState([]);
+    const [interactionAlerts, setInteractionAlerts] = useState([]);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
 
     // Prescription Scan State
     const [showScanModal, setShowScanModal] = useState(false);
@@ -147,6 +149,49 @@ export default function POS() {
             setShowReservationAlert(true);
         }
     };
+
+    // AI Neural Interaction Scanner
+    useEffect(() => {
+        if (cart.length > 0) {
+            setIsAnalyzing(true);
+            const timer = setTimeout(() => {
+                const alerts = [];
+                const names = cart.map(i => i.name.toLowerCase());
+
+                // Mock Interaction Rules
+                if (names.some(n => n.includes('augmentin')) && names.some(n => n.includes('aspirine'))) {
+                    alerts.push({
+                        id: 1, level: 'Middle', title: 'Risque Gastrique Accru',
+                        desc: 'L association de l amoxicilline/acide clavulanique avec l aspirine peut augmenter la sensibilité gastrique.',
+                        vibe: 'Warning'
+                    });
+                }
+
+                if (names.some(n => n.includes('doliprane')) && names.some(n => n.includes('efferalgan'))) {
+                    alerts.push({
+                        id: 2, level: 'Critical', title: 'Surdosage Paracétamol',
+                        desc: 'Ces deux produits contiennent du Paracétamol. Risque élevé de toxicité hépatique.',
+                        vibe: 'Danger'
+                    });
+                }
+
+                // Interaction with Patient History (Simulated)
+                if (selectedPatient?.name === 'Mme Diop' && names.some(n => n.includes('aspirine'))) {
+                    alerts.push({
+                        id: 3, level: 'Middle', title: 'Contre-indication Patient',
+                        desc: 'Ce patient est sous traitement anticoagulant chronique. L Aspirine est déconseillée.',
+                        vibe: 'Warning'
+                    });
+                }
+
+                setInteractionAlerts(alerts);
+                setIsAnalyzing(false);
+            }, 1200);
+            return () => clearTimeout(timer);
+        } else {
+            setInteractionAlerts([]);
+        }
+    }, [cart, selectedPatient]);
 
     const claimReservation = () => {
         const product = MOCK_PRODUCTS.find(p => p.name === activeReservation.product);
@@ -300,9 +345,6 @@ export default function POS() {
                 </div>
             )}
 
-            {/* Existing Overlays (Signature, Scan, Patient, Receipt, Drawer) omitted for brevity in response but preserved in file */}
-            {/* ... preserved logic for Signature, Scan, Patient, Receipt ... */}
-
             {/* Modal Signature Overlay */}
             {isSigning && (
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 6000, backdropFilter: 'blur(10px)' }}>
@@ -408,6 +450,34 @@ export default function POS() {
                 </div>
             )}
 
+            {/* Modal History Overlay */}
+            {showHistory && (
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 4000, backdropFilter: 'blur(4px)' }}>
+                    <div style={{ backgroundColor: 'white', padding: '32px', borderRadius: '32px', width: '550px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
+                            <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>Journal des Ventes</h2>
+                            <button onClick={() => setShowHistory(false)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}><X size={28} /></button>
+                        </div>
+                        <div style={{ maxHeight: '450px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            {salesHistory.length > 0 ? salesHistory.map(sale => (
+                                <div key={sale.id} className="card" style={{ padding: '16px', border: '1px solid #e2e8f0' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                        <span style={{ fontWeight: '800' }}>{sale.id} • {sale.date}</span>
+                                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{sale.paymentMethod}</span>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                                        <span>{sale.patient}</span>
+                                        <span style={{ fontWeight: '900' }}>{sale.total.toLocaleString()} F</span>
+                                    </div>
+                                </div>
+                            )) : (
+                                <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Aucune vente aujourd'hui.</div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Modal Receipt Overlay */}
             {showReceipt && lastSale && (
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000 }}>
@@ -424,7 +494,7 @@ export default function POS() {
                             <div style={{ borderTop: '1px dashed #cbd5e1', paddingTop: '16px', display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}><span style={{ fontSize: '1rem', fontWeight: '600' }}>TOTAL VENTE</span><span style={{ fontSize: '1rem', fontWeight: '800' }}>{lastSale.total.toLocaleString()} F</span></div>
                             {lastSale.insuranceShare > 0 && (
                                 <>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: 'var(--primary)' }}><span style={{ fontSize: '0.9rem', fontWeight: '600' }}>PART MUTUELLE ({selectedPatient?.mutuelle})</span><span style={{ fontSize: '0.9rem', fontWeight: '700' }}>- {lastSale.insuranceShare.toLocaleString()} F</span></div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: 'var(--primary)' }}><span style={{ fontSize: '0.9rem', fontWeight: '600' }}>PART MUTUELLE ({lastSale.mutuelle})</span><span style={{ fontSize: '0.9rem', fontWeight: '700' }}>- {lastSale.insuranceShare.toLocaleString()} F</span></div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '900', fontSize: '1.2rem', color: 'var(--secondary)', paddingTop: '8px', borderTop: '1px solid #e2e8f0' }}><span>À PAYER PATIENT</span><span>{lastSale.patientShare.toLocaleString()} F</span></div>
                                 </>
                             )}
@@ -473,10 +543,44 @@ export default function POS() {
                         <div><h2 style={{ fontSize: '1.4rem', fontWeight: '900' }}>Caisse N1</h2><p style={{ fontSize: '0.8rem', opacity: 0.7, fontWeight: '600' }}>Dr. Wane • Officine</p></div>
                         <div style={{ display: 'flex', gap: '8px' }}><button onClick={() => setShowHistory(true)} style={{ padding: '12px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'rgba(255,255,255,0.1)', color: 'white', cursor: 'pointer' }}><History size={24} /></button></div>
                     </div>
-                    <button onClick={() => setShowPatientSelect(true)} style={{ width: '100%', padding: '14px', borderRadius: '16px', border: 'none', backgroundColor: selectedPatient ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255,255,255,0.1)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', transition: 'all 0.2s', marginBottom: '12px' }}>
-                        {selectedPatient ? <ShieldCheck size={22} color="var(--primary)" /> : <UserPlus size={22} />}
-                        <div style={{ textAlign: 'left', flex: 1 }}><p style={{ fontSize: '0.9rem', fontWeight: '800' }}>{selectedPatient ? selectedPatient.name : 'Identifier un Patient'}</p>{selectedPatient && <p style={{ fontSize: '0.7rem', opacity: 0.8 }}>Mutuelle: {selectedPatient.mutuelle} ({Math.round(coverageRate * 100)}%)</p>}</div>
-                    </button>
+
+                    {/* Patient & IA Widget Sidebar */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+                        <button onClick={() => setShowPatientSelect(true)} style={{ width: '100%', padding: '14px', borderRadius: '16px', border: 'none', backgroundColor: selectedPatient ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255,255,255,0.1)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', transition: 'all 0.2s' }}>
+                            {selectedPatient ? <ShieldCheck size={22} color="var(--primary)" /> : <UserPlus size={22} />}
+                            <div style={{ textAlign: 'left', flex: 1 }}><p style={{ fontSize: '0.9rem', fontWeight: '800' }}>{selectedPatient ? selectedPatient.name : 'Identifier un Patient'}</p>{selectedPatient && <p style={{ fontSize: '0.7rem', opacity: 0.8 }}>Mutuelle: {selectedPatient.mutuelle} ({Math.round(coverageRate * 100)}%)</p>}</div>
+                        </button>
+
+                        <div className="card" style={{
+                            padding: '14px',
+                            background: interactionAlerts.length > 0 ? (interactionAlerts.some(a => a.vibe === 'Danger') ? '#fee2e2' : 'rgba(255, 159, 28, 0.1)') : 'rgba(255,255,255,0.05)',
+                            border: '1px solid ' + (interactionAlerts.length > 0 ? (interactionAlerts.some(a => a.vibe === 'Danger') ? '#ef4444' : '#f59e0b') : 'rgba(255,255,255,0.1)'),
+                            color: interactionAlerts.length > 0 ? '#1e293b' : 'white',
+                            transition: 'all 0.3s ease'
+                        }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: interactionAlerts.length > 0 ? '8px' : '0' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    {isAnalyzing ? <RotateCcw size={16} className="spin" color="white" /> : <ShieldCheck size={16} color={interactionAlerts.length > 0 ? (interactionAlerts.some(a => a.vibe === 'Danger') ? '#ef4444' : '#f59e0b') : '#10b981'} />}
+                                    <span style={{ fontSize: '0.75rem', fontWeight: '900' }}>SCANNER NEURAL IA</span>
+                                </div>
+                                {interactionAlerts.length > 0 && <span style={{ padding: '2px 6px', borderRadius: '4px', background: interactionAlerts.some(a => a.vibe === 'Danger') ? '#ef4444' : '#f59e0b', color: 'white', fontSize: '0.65rem', fontWeight: '900' }}>{interactionAlerts.length}</span>}
+                            </div>
+                            {isAnalyzing ? (
+                                <p style={{ fontSize: '0.7rem', opacity: 0.6 }}>Analyse des interactions...</p>
+                            ) : interactionAlerts.length > 0 ? (
+                                <div>
+                                    <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                                        <AlertTriangle size={14} color={interactionAlerts[0].vibe === 'Danger' ? '#ef4444' : '#f59e0b'} />
+                                        <p style={{ fontSize: '0.7rem', fontWeight: '800' }}>{interactionAlerts[0].title}</p>
+                                    </div>
+                                    <button style={{ width: '100%', padding: '6px', borderRadius: '6px', background: 'rgba(0,0,0,0.2)', color: 'white', border: 'none', fontSize: '0.65rem', fontWeight: '700', cursor: 'pointer' }}>VOIR LE RAPPORT IA</button>
+                                </div>
+                            ) : (
+                                <p style={{ fontSize: '0.70rem', opacity: 0.8 }}>✓ Sécurité Pharmacologique OK</p>
+                            )}
+                        </div>
+                    </div>
+
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                         <button onClick={() => setShowScanModal(true)} style={{ padding: '12px', borderRadius: '16px', border: scannedDoc ? 'none' : '2px dashed rgba(255,255,255,0.3)', backgroundColor: scannedDoc ? 'var(--primary)' : 'rgba(0,0,0,0.1)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s' }}>{scannedDoc ? <CheckCircle size={18} /> : <FileSearch size={18} />}<span style={{ fontSize: '0.75rem', fontWeight: '700' }}>Ordonnance</span></button>
                         <button onClick={() => setUseSignature(!useSignature)} style={{ padding: '12px', borderRadius: '16px', border: 'none', backgroundColor: useSignature ? '#8b5cf6' : 'rgba(0,0,0,0.1)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s', opacity: selectedPatient ? 1 : 0.5 }} disabled={!selectedPatient}><PenTool size={18} /><span style={{ fontSize: '0.75rem', fontWeight: '700' }}>{useSignature ? 'Sign. Active' : 'Sans Signature'}</span></button>
