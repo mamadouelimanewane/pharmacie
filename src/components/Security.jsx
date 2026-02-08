@@ -25,6 +25,7 @@ export default function Security() {
     const [activeTab, setActiveTab] = useState('users');
     const [isBackingUp, setIsBackingUp] = useState(false);
     const [backupStep, setBackupStep] = useState('');
+    const [isAirGappedSyncing, setIsAirGappedSyncing] = useState(false);
     const [twoFactorEnabled, setTwoFactorEnabled] = useState(true);
     const [show2FAModal, setShow2FAModal] = useState(false);
     const [panicMode, setPanicMode] = useState(false);
@@ -325,12 +326,31 @@ export default function Security() {
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                             <button onClick={() => setShowPanicConfirm(false)} style={{ padding: '16px', borderRadius: '16px', border: '1px solid #e2e8f0', background: 'white', fontWeight: '800', cursor: 'pointer' }}>Annuler</button>
                             <button
-                                onClick={() => { setPanicMode(true); setShowPanicConfirm(false); }}
+                                onClick={() => {
+                                    setPanicMode(true);
+                                    setShowPanicConfirm(false);
+                                    setIsAirGappedSyncing(true);
+                                    setTimeout(() => setIsAirGappedSyncing(false), 3000);
+                                }}
                                 style={{ padding: '16px', borderRadius: '16px', border: 'none', background: '#ef4444', color: 'white', fontWeight: '900', cursor: 'pointer', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)' }}
                             >
                                 ACTIVER LE LOCKDOWN
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Air-Gapped Sync Notification */}
+            {isAirGappedSyncing && (
+                <div style={{ position: 'fixed', top: '20px', right: '20px', backgroundColor: '#0f172a', color: 'white', padding: '20px', borderRadius: '20px', zIndex: 11000, boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)', border: '1px solid #ef4444', minWidth: '300px' }} className="fade-in">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                        <RefreshCw size={20} className="spin" color="#ef4444" />
+                        <span style={{ fontWeight: '900', color: '#ef4444' }}>SYNC. AIR-GAPPED ACTIVE</span>
+                    </div>
+                    <p style={{ fontSize: '0.75rem', opacity: 0.8, marginBottom: '12px' }}>Extraction de la base de données vers le stockage local immuable...</p>
+                    <div style={{ width: '100%', height: '4px', background: '#334155', borderRadius: '2px', overflow: 'hidden' }}>
+                        <div style={{ width: '100%', height: '100%', background: '#ef4444', animation: 'progressAir 3s linear' }}></div>
                     </div>
                 </div>
             )}
@@ -351,6 +371,7 @@ export default function Security() {
 
             <style>{`
         @keyframes progress { from { width: 0%; } to { width: 65%; } }
+        @keyframes progressAir { from { width: 0%; } to { width: 100%; } }
         .spin { animation: rotate 1.5s linear infinite; }
         @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.5); } 100% { opacity: 1; transform: scale(1); } }
