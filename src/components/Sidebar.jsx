@@ -18,13 +18,17 @@ import {
   Thermometer,
   Zap,
   Radio,
-  Heart
+  Heart,
+  Globe,
+  ShoppingBag
 } from 'lucide-react';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Tableau de bord', id: 'dashboard' },
   { icon: ShoppingCart, label: 'Ventes / Comptoir', id: 'pos' },
   { icon: Smartphone, label: 'Click & Collect', id: 'ecommerce' },
+  { icon: ShoppingBag, label: 'Manager Boutique Publique', id: 'boutique-manager' },
+  { icon: Globe, label: 'Voir Site Client', id: 'boutique-preview' },
   { icon: Package, label: 'Gestion des Stocks', id: 'inventory' },
   { icon: Cpu, label: 'Automate / Robot', id: 'automation' },
   { icon: Radio, label: 'Centre d\'AI Automation', id: 'automation-center' },

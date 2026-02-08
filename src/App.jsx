@@ -16,6 +16,8 @@ import ManagerPortal from './components/ManagerPortal';
 import Security from './components/Security';
 import SanitarySecurity from './components/SanitarySecurity';
 import AutomationCenter from './components/AutomationCenter';
+import BoutiqueBackoffice from './boutique/BoutiqueBackoffice';
+import Storefront from './boutique/Storefront';
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -28,6 +30,10 @@ function App() {
         return <POS />;
       case 'ecommerce':
         return <ClickAndCollect />;
+      case 'boutique-manager':
+        return <BoutiqueBackoffice />;
+      case 'boutique-preview':
+        return <Storefront />;
       case 'inventory':
         return <Inventory />;
       case 'automation':
