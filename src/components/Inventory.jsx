@@ -46,7 +46,7 @@ export default function Inventory() {
                     </div>
                     <div>
                         <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>VALEUR DU STOCK</p>
-                        <p style={{ fontSize: '1.25rem', fontWeight: '700' }}>{totalValue.toLocaleString('fr-FR')} €</p>
+                        <p style={{ fontSize: '1.25rem', fontWeight: '700' }}>{totalValue.toLocaleString('fr-FR')} FCFA</p>
                     </div>
                 </div>
                 <div className="card" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
@@ -117,7 +117,7 @@ export default function Inventory() {
                                 </td>
                                 <td>{product.stock} units</td>
                                 <td>{product.minStock}</td>
-                                <td>{product.price.toFixed(2)} €</td>
+                                <td>{product.price.toLocaleString()} FCFA</td>
                                 <td>
                                     <span style={{
                                         padding: '4px 8px',

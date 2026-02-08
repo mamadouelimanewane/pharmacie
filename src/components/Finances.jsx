@@ -20,21 +20,21 @@ export default function Finances() {
                 <div className="card" style={{ borderLeft: '4px solid var(--primary)' }}>
                     <p style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>CHIFFRE D'AFFAIRES (MENSUEL)</p>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <p style={{ fontSize: '1.5rem', fontWeight: '700' }}>85,420 €</p>
+                        <p style={{ fontSize: '1.5rem', fontWeight: '700' }}>55 840 000 FCFA</p>
                         <span style={{ color: 'var(--success)', display: 'flex', alignItems: 'center', fontSize: '0.8rem' }}><ArrowUpRight size={14} /> +4.2%</span>
                     </div>
                 </div>
                 <div className="card" style={{ borderLeft: '4px solid var(--accent)' }}>
                     <p style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>REMBOURSEMENTS ATTENDUS</p>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <p style={{ fontSize: '1.5rem', fontWeight: '700' }}>12,850 €</p>
+                        <p style={{ fontSize: '1.5rem', fontWeight: '700' }}>8 450 000 FCFA</p>
                         <span style={{ color: 'var(--warning)', fontSize: '0.8rem' }}>124 factures</span>
                     </div>
                 </div>
                 <div className="card" style={{ borderLeft: '4px solid var(--error)' }}>
                     <p style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>IMPAYÉS / REJETS</p>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <p style={{ fontSize: '1.5rem', fontWeight: '700' }}>420 €</p>
+                        <p style={{ fontSize: '1.5rem', fontWeight: '700' }}>275 000 FCFA</p>
                         <span style={{ color: 'var(--error)', display: 'flex', alignItems: 'center', fontSize: '0.8rem' }}><AlertCircle size={14} /> 8 rejets</span>
                     </div>
                 </div>
@@ -75,10 +75,10 @@ export default function Finances() {
                     </h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         {[
-                            { source: 'CPAM Paris', amount: '1,420.50 €', status: 'Bordereau acquitté', date: 'Hier' },
-                            { source: 'Harmonie Mutuelle', amount: '840.20 €', status: 'En attente', date: '07/02' },
-                            { source: 'MGEN', amount: '125.00 €', status: 'Rejet (N° adhérent)', date: '07/02', error: true },
-                            { source: 'CPAM Lyon', amount: '3,110.00 €', status: 'Partiellement payé', date: '06/02' },
+                            { source: 'IPM Dakar', amount: '845 000 FCFA', status: 'Bordereau acquitté', date: 'Hier' },
+                            { source: 'AXA Sénégal', amount: '520 000 FCFA', status: 'En attente', date: '07/02' },
+                            { source: 'NSIA', amount: '85 000 FCFA', status: 'Rejet (N° adhérent)', date: '07/02', error: true },
+                            { source: 'IPM Saint-Louis', amount: '1 250 000 FCFA', status: 'Partiellement payé', date: '06/02' },
                         ].map((flux, i) => (
                             <div key={i} style={{
                                 padding: '1rem',

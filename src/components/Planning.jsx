@@ -1,12 +1,6 @@
-import React from 'react';
 import { Calendar, Clock, User, CalendarDays, Plus, UserCheck, AlertCircle } from 'lucide-react';
+import { MOCK_STAFF } from '../data/mockData';
 
-const staff = [
-    { id: 1, name: 'Dr. Martin Durand', role: 'Pharmacien Titulaire', status: 'Présent', shift: '08:00 - 18:00' },
-    { id: 2, name: 'Julie Leroy', role: 'Préparatrice', status: 'Présente', shift: '09:00 - 17:00' },
-    { id: 3, name: 'Thomas Bernard', role: 'Apprenti', status: 'Absent', shift: 'Repos', reason: 'Formation' },
-    { id: 4, name: 'Dr. Sarah Meyer', role: 'Pharmacien Adjoint', status: 'Présente', shift: '12:00 - 20:00' },
-];
 
 export default function Planning() {
     return (
@@ -40,7 +34,7 @@ export default function Planning() {
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        {staff.map(member => (
+                        {MOCK_STAFF.map(member => (
                             <div key={member.id} style={{
                                 padding: '1.25rem',
                                 borderRadius: 'var(--radius-md)',
@@ -106,13 +100,13 @@ export default function Planning() {
                         </h3>
                         <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                             <li style={{ fontSize: '0.875rem', padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
-                                • Visite médicale Julie L. le 12/02
+                                • Visite médicale Fatou S. le 12/02
                             </li>
                             <li style={{ fontSize: '0.875rem', padding: '0.5rem', borderBottom: '1px solid var(--border)' }}>
-                                • Renouvellement habilitation SCOR Dr. Sarah
+                                • Renouvellement habilitation SCOR Dr. Ramatoulaye
                             </li>
                             <li style={{ fontSize: '0.875rem', padding: '0.5rem' }}>
-                                • Point trimestriel Thomas B.
+                                • Point trimestriel Cheikh T.
                             </li>
                         </ul>
                     </div>

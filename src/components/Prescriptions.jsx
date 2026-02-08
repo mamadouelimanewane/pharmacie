@@ -1,12 +1,6 @@
-import React, { useState } from 'react';
 import { FileText, Search, Plus, Filter, Clock, CheckCircle2, AlertCircle, Scan, Download, User } from 'lucide-react';
+import { MOCK_PRESCRIPTIONS } from '../data/mockData';
 
-const mockPrescriptions = [
-    { id: 1, patient: 'Jean Dupont', doctor: 'Dr. Faure', date: '08/02/2026', status: 'En attente', items: 3, priority: 'Normal' },
-    { id: 2, patient: 'Marie Curie', doctor: 'Dr. Pasteur', date: '08/02/2026', status: 'En cours', items: 5, priority: 'Urgent' },
-    { id: 3, patient: 'Pierre Martin', doctor: 'Dr. Lucas', date: '07/02/2026', status: 'Prêt', items: 1, priority: 'Normal' },
-    { id: 4, patient: 'Sophie Bernard', doctor: 'Dr. Girard', date: '07/02/2026', status: 'Terminé', items: 4, priority: 'Normal' },
-];
 
 export default function Prescriptions() {
     return (
@@ -78,7 +72,7 @@ export default function Prescriptions() {
                         </tr>
                     </thead>
                     <tbody>
-                        {mockPrescriptions.map(presc => (
+                        {MOCK_PRESCRIPTIONS.map(presc => (
                             <tr key={presc.id}>
                                 <td style={{ fontWeight: '600' }}>{presc.patient}</td>
                                 <td>{presc.doctor}</td>

@@ -68,7 +68,7 @@ export default function Dashboard() {
         <div className="dashboard">
             <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                    <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Bienvenue, Dr. Durand</h1>
+                    <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Bienvenue, Dr. Wane</h1>
                     <p style={{ color: 'var(--text-muted)' }}>Voici un aperçu de l'activité de votre officine aujourd'hui.</p>
                 </div>
                 <div style={{ display: 'flex', gap: '1rem' }}>
@@ -80,7 +80,7 @@ export default function Dashboard() {
             </header>
 
             <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
-                <StatCard title="Chiffre d'Affaires" value="2,840.00 €" icon={DollarSign} trend={12.5} color="#059669" />
+                <StatCard title="Chiffre d'Affaires" value="1 845 000 FCFA" icon={DollarSign} trend={12.5} color="#059669" />
                 <StatCard title="Ventes réalisées" value="142" icon={ShoppingCart} trend={8.2} color="#06b6d4" />
                 <StatCard title="Nouveaux Patients" value="12" icon={Users} trend={-2.4} color="#6366f1" />
                 <StatCard title="Produits en Alerte" value="8" icon={AlertCircle} trend={0} color="#f59e0b" />
@@ -124,7 +124,7 @@ export default function Dashboard() {
                         {[
                             { type: 'stock', text: 'Paracétamol 500mg - Stock critique (12 unités)', time: 'Il y a 10 min' },
                             { type: 'order', text: 'Commande GROSSISTE à valider avant 16h', time: 'Urgent' },
-                            { type: 'patient', text: 'Mme Martin : Suivi pharmaceutique requis', time: '16:30' },
+                            { type: 'patient', text: 'Mme Ndiaye : Suivi pharmaceutique requis', time: '16:30' },
                             { type: 'system', text: 'Mise à jour VIDAL effectuée avec succès', time: 'Ce matin' },
                         ].map((alert, i) => (
                             <div key={i} style={{

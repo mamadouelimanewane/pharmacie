@@ -1,16 +1,15 @@
-import React, { useState } from 'react';
 import { Users, Search, Plus, UserPlus, Filter, MoreVertical, FileText, AlertTriangle, History } from 'lucide-react';
+import { MOCK_PATIENTS } from '../data/mockData';
 
-const mockPatients = [
-    { id: 1, name: 'Jean Dupont', dob: '12/05/1965', nss: '1 65 05 75 001 002 45', phone: '06 12 34 56 78', lastVisit: '02/02/2026', risk: 'None' },
-    { id: 2, name: 'Marie Curie', dob: '07/11/1867', nss: '2 67 11 75 001 003 12', phone: '06 98 76 54 32', lastVisit: '05/02/2026', risk: 'Allergie Pénicilline' },
-    { id: 3, name: 'Pierre Martin', dob: '22/01/1980', nss: '1 80 01 92 001 004 88', phone: '07 44 22 11 33', lastVisit: '07/02/2026', risk: 'Diabète Type 2' },
-    { id: 4, name: 'Sophie Bernard', dob: '30/09/1992', nss: '2 92 09 13 001 005 55', phone: '01 45 67 89 00', lastVisit: '01/02/2026', risk: 'Hypertension' },
-];
 
 export default function Patients() {
     const [searchTerm, setSearchTerm] = useState('');
 
+    const filteredPatients = MOCK_PATIENTS.filter(p =>
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.nss.includes(searchTerm) ||
+        p.phone.includes(searchTerm)
+    );
     return (
         <div className="patients fade-in">
             <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
@@ -102,7 +101,7 @@ export default function Patients() {
                         </tr>
                     </thead>
                     <tbody>
-                        {mockPatients.map(patient => (
+                        {filteredPatients.map(patient => (
                             <tr key={patient.id}>
                                 <td>
                                     <div style={{ fontWeight: '600', color: 'var(--secondary)' }}>{patient.name}</div>

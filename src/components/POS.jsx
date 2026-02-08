@@ -94,7 +94,7 @@ export default function POS() {
                             >
                                 <p style={{ fontWeight: '600', marginBottom: '0.5rem' }}>{product.name}</p>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>{product.price.toFixed(2)} €</span>
+                                    <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>{product.price.toLocaleString()} FCFA</span>
                                     <span style={{ fontSize: '0.75rem', color: product.status === 'Critique' ? 'var(--error)' : 'var(--text-muted)' }}>Stock: {product.stock}</span>
                                 </div>
                             </button>
@@ -128,7 +128,7 @@ export default function POS() {
                                                 <span style={{ fontSize: '0.875rem', minWidth: '20px', textAlign: 'center' }}>{item.quantity}</span>
                                                 <button onClick={() => updateQuantity(item.id, 1)} style={{ padding: '2px', borderRadius: '4px', border: '1px solid var(--border)', background: 'none', cursor: 'pointer' }}><Plus size={14} /></button>
                                             </div>
-                                            <span style={{ fontWeight: '600' }}>{(item.price * item.quantity).toFixed(2)} €</span>
+                                            <span style={{ fontWeight: '600' }}>{(item.price * item.quantity).toLocaleString()} FCFA</span>
                                         </div>
                                     </div>
                                     <button onClick={() => removeFromCart(item.id)} style={{ color: 'var(--error)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}>
@@ -143,15 +143,15 @@ export default function POS() {
                 <div style={{ padding: '1.5rem', borderTop: '2px dashed var(--border)', backgroundColor: '#f8fafc' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
                         <span style={{ color: 'var(--text-muted)' }}>Sous-total</span>
-                        <span>{(total * 0.9).toFixed(2)} €</span>
+                        <span>{(total * 0.9).toLocaleString()} FCFA</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', fontSize: '0.875rem' }}>
                         <span style={{ color: 'var(--text-muted)' }}>TVA (10% & 2.1%)</span>
-                        <span>{(total * 0.1).toFixed(2)} €</span>
+                        <span>{(total * 0.1).toLocaleString()} FCFA</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
                         <span style={{ fontWeight: '700', fontSize: '1.25rem' }}>Total à payer</span>
-                        <span style={{ fontWeight: '700', fontSize: '1.25rem', color: 'var(--primary)' }}>{total.toFixed(2)} €</span>
+                        <span style={{ fontWeight: '700', fontSize: '1.25rem', color: 'var(--primary)' }}>{total.toLocaleString()} FCFA</span>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>

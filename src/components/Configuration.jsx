@@ -74,7 +74,7 @@ export default function Configuration() {
                     {[
                         { id: 'general', icon: Building2, label: 'Officine' },
                         { id: 'users', icon: User, label: 'Utilisateurs' },
-                        { id: 'integrations', icon: Cloud, label: 'Intégrations (Vidal, SESAM)' },
+                        { id: 'integrations', icon: Cloud, label: 'Intégrations (Vidal, IPM)' },
                         { id: 'security', icon: Shield, label: 'Sécurité & RGPD' },
                         { id: 'notifications', icon: Bell, label: 'Notifications' },
                         { id: 'advanced', icon: Database, label: 'Base de données' },
@@ -103,7 +103,7 @@ export default function Configuration() {
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                             <div>
                                 <label style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>Nom Commercial</label>
-                                <input type="text" defaultValue="Pharmacie de la Mairie" style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }} />
+                                <input type="text" defaultValue="Pharmacie de la Terranga" style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }} />
                             </div>
                             <div>
                                 <label style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>N° FINESS</label>
@@ -121,7 +121,7 @@ export default function Configuration() {
                     />
                     <SettingItem
                         icon={Key}
-                        title="Télétransmission SCOR"
+                        title="Télétransmission IPM (GIE)"
                         description="Activation de la numérisation et envoi des pièces justificatives."
                         active={true}
                     />

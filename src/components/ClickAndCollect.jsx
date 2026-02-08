@@ -1,12 +1,6 @@
-import React, { useState } from 'react';
 import { Smartphone, ShoppingBag, Clock, CheckCircle2, AlertCircle, MapPin, User, Package, ArrowRight } from 'lucide-react';
+import { MOCK_ORDERS } from '../data/mockData';
 
-const mockOrders = [
-    { id: 'CC-8942', patient: 'Alice Robert', time: '14:30', status: 'À préparer', items: 4, type: 'Ordonnance numérisée' },
-    { id: 'CC-8943', patient: 'Marc Vasseur', time: '15:15', status: 'En préparation', items: 2, type: 'Parapharmacie' },
-    { id: 'CC-8944', patient: 'Sophie Laine', time: '16:00', status: 'Prêt', items: 3, type: 'Mixte' },
-    { id: 'CC-8945', patient: 'Lucie Verne', time: '16:30', status: 'Prêt', items: 1, type: 'Ordonnance numérisée' },
-];
 
 export default function ClickAndCollect() {
     return (
@@ -28,14 +22,14 @@ export default function ClickAndCollect() {
                 <div className="card" style={{ backgroundColor: 'var(--primary)', color: 'white' }}>
                     <p style={{ fontSize: '0.75rem', fontWeight: '700', color: 'rgba(255,255,255,0.7)', marginBottom: '0.5rem' }}>À PRÉPARER</p>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <p style={{ fontSize: '1.75rem', fontWeight: '700' }}>{mockOrders.filter(o => o.status === 'À préparer').length}</p>
+                        <p style={{ fontSize: '1.75rem', fontWeight: '700' }}>{MOCK_ORDERS.filter(o => o.status === 'À préparer').length}</p>
                         <Clock size={24} />
                     </div>
                 </div>
                 <div className="card">
                     <p style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>PRÊT POUR RETRAIT</p>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <p style={{ fontSize: '1.75rem', fontWeight: '700', color: 'var(--success)' }}>{mockOrders.filter(o => o.status === 'Prêt').length}</p>
+                        <p style={{ fontSize: '1.75rem', fontWeight: '700', color: 'var(--success)' }}>{MOCK_ORDERS.filter(o => o.status === 'Prêt').length}</p>
                         <MapPin size={24} color="var(--success)" />
                     </div>
                 </div>
@@ -71,7 +65,7 @@ export default function ClickAndCollect() {
                         </tr>
                     </thead>
                     <tbody>
-                        {mockOrders.map(order => (
+                        {MOCK_ORDERS.map(order => (
                             <tr key={order.id}>
                                 <td style={{ fontWeight: '700', color: 'var(--primary)' }}>{order.id}</td>
                                 <td>
