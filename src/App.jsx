@@ -12,6 +12,7 @@ import ClickAndCollect from './components/ClickAndCollect';
 import Automation from './components/Automation';
 import AIAssistant from './components/AIAssistant';
 import Mutuelles from './components/Mutuelles';
+import ManagerPortal from './components/ManagerPortal';
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -42,6 +43,8 @@ function App() {
         return <Planning />;
       case 'settings':
         return <Configuration />;
+      case 'manager-portal':
+        return <ManagerPortal />;
       default:
         return <Dashboard />;
     }

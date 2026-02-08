@@ -28,6 +28,7 @@ const navItems = [
   { icon: Users, label: 'Patients', id: 'patients' },
   { icon: Activity, label: 'Finances / Reporting', id: 'finances' },
   { icon: Users, label: 'Planning / RH', id: 'staff' },
+  { icon: Smartphone, label: 'Portail Manager (Mobile)', id: 'manager-portal' },
   { icon: Settings, label: 'Paramètres', id: 'settings' },
 ];
 
