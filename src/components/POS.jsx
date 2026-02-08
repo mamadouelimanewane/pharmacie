@@ -7,7 +7,7 @@ import {
     QrCode, Loader2, CheckCircle2, Barcode, Unlock,
     Mail, FileText, Download, Clock, RotateCcw, UserPlus,
     AlertTriangle, Landmark, Shield, Camera, Image as ImageIcon,
-    FileSearch, CheckCircle
+    FileSearch, CheckCircle, PenTool, Eraser
 } from 'lucide-react';
 import { MOCK_PRODUCTS, MOCK_PATIENTS } from '../data/mockData';
 
@@ -86,6 +86,11 @@ export default function POS() {
     const [showScanModal, setShowScanModal] = useState(false);
     const [isScanning, setIsScanning] = useState(false);
     const [scannedDoc, setScannedDoc] = useState(null);
+
+    // Signature State
+    const [useSignature, setUseSignature] = useState(false); // Option Toggle
+    const [isSigning, setIsSigning] = useState(false);
+    const [signatureCaptured, setSignatureCaptured] = useState(false);
 
     // Barcode Scanner logic
     const barcodeBuffer = useRef('');
@@ -177,6 +182,7 @@ export default function POS() {
             patient: selectedPatient ? selectedPatient.name : 'Client Anonyme',
             mutuelle: selectedPatient ? selectedPatient.mutuelle : 'Aucune',
             prescriptionAttached: !!scannedDoc,
+            signed: signatureCaptured,
             date: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
             fullDate: new Date().toLocaleString(),
             paymentMethod: type === 'cash' ? 'ESPÈCES' : mobilePayment === 'wave' ? 'WAVE' : 'ORANGE MONEY',
@@ -209,6 +215,8 @@ export default function POS() {
         setSelectedPatient(null);
         setPhoneNumber('');
         setScannedDoc(null);
+        setIsSigning(false);
+        setSignatureCaptured(false);
     };
 
     const startMobilePayment = (type) => {
@@ -241,6 +249,45 @@ export default function POS() {
             borderRadius: 'var(--radius-lg)',
             position: 'relative'
         }}>
+            {/* Overlay Signature (Optionnel) */}
+            {isSigning && (
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 6000, backdropFilter: 'blur(10px)' }}>
+                    <div style={{ backgroundColor: 'white', padding: '40px', borderRadius: '32px', width: '600px', textAlign: 'center', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
+                            <div>
+                                <h2 style={{ fontSize: '1.5rem', fontWeight: '800', textAlign: 'left' }}>Signature du Patient</h2>
+                                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'left' }}>Validation de la prise en charge {selectedPatient?.mutuelle}</p>
+                            </div>
+                            <button onClick={() => setIsSigning(false)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}><X size={32} /></button>
+                        </div>
+
+                        <div style={{ width: '100%', height: '250px', backgroundColor: '#f8fafc', border: '2px solid #e2e8f0', borderRadius: '20px', position: 'relative', cursor: 'crosshair', marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setSignatureCaptured(true)}>
+                            {signatureCaptured ? (
+                                <div style={{ fontSize: '2rem', fontFamily: '"Dancing Script", cursive', color: 'var(--secondary)', transform: 'rotate(-5deg)' }}>Signature Client</div>
+                            ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', opacity: 0.3 }}>
+                                    <PenTool size={48} />
+                                    <p style={{ fontWeight: '600' }}>Veuillez signer ici</p>
+                                </div>
+                            )}
+                            <div style={{ position: 'absolute', bottom: '20px', left: '20px', right: '20px', borderBottom: '2px dashed #cbd5e1' }}></div>
+                            <button onClick={(e) => { e.stopPropagation(); setSignatureCaptured(false); }} style={{ position: 'absolute', bottom: '10px', right: '10px', padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', color: 'var(--error)' }}><Eraser size={18} /></button>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '12px' }}>
+                            <button onClick={() => { setSignatureCaptured(false); setIsSigning(false); }} style={{ flex: 1, padding: '18px', borderRadius: '16px', border: '1px solid #e2e8f0', background: 'white', fontWeight: '700', fontSize: '1.1rem' }}>Ignorer</button>
+                            <button
+                                onClick={() => setIsSigning(false)}
+                                disabled={!signatureCaptured}
+                                style={{ flex: 1, padding: '18px', borderRadius: '16px', border: 'none', background: signatureCaptured ? 'var(--primary)' : '#cbd5e1', color: 'white', fontWeight: '800', fontSize: '1.1rem' }}
+                            >
+                                Valider la Signature
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Modal Numérisation Ordonnance */}
             {showScanModal && (
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 5000, backdropFilter: 'blur(8px)' }}>
@@ -330,8 +377,10 @@ export default function POS() {
                                 <span style={{ fontWeight: '700' }}>{lastSale.patient}</span>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.9rem' }}>
-                                <span style={{ color: 'var(--text-muted)' }}>Mode</span>
-                                <span style={{ fontWeight: '700' }}>{lastSale.paymentMethod}</span>
+                                <span style={{ color: 'var(--text-muted)' }}>Signé</span>
+                                <span style={{ fontWeight: '700', color: lastSale.signed ? 'var(--success)' : 'var(--text-muted)' }}>
+                                    {lastSale.signed ? 'Oui ✅' : 'Non'}
+                                </span>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', fontSize: '0.9rem' }}>
                                 <span style={{ color: 'var(--text-muted)' }}>Ordonnance</span>
@@ -457,22 +506,34 @@ export default function POS() {
                         {selectedPatient && <X size={18} style={{ opacity: 0.6 }} onClick={(e) => { e.stopPropagation(); setSelectedPatient(null); }} />}
                     </button>
 
-                    {/* Prescription Scanner Button */}
-                    <button
-                        onClick={() => setShowScanModal(true)}
-                        style={{
-                            width: '100%', padding: '12px', borderRadius: '16px', border: scannedDoc ? 'none' : '2px dashed rgba(255,255,255,0.3)',
-                            backgroundColor: scannedDoc ? 'var(--primary)' : 'rgba(0,0,0,0.1)',
-                            color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px',
-                            transition: 'all 0.2s'
-                        }}
-                    >
-                        {scannedDoc ? <CheckCircle size={22} /> : <FileSearch size={22} />}
-                        <span style={{ fontSize: '0.85rem', fontWeight: '700' }}>
-                            {scannedDoc ? 'Ordonnance numérisée' : 'Numériser l\'Ordonnance'}
-                        </span>
-                        {scannedDoc && <X size={16} style={{ marginLeft: 'auto', opacity: 0.6 }} onClick={(e) => { e.stopPropagation(); setScannedDoc(null); }} />}
-                    </button>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                        <button
+                            onClick={() => setShowScanModal(true)}
+                            style={{
+                                padding: '12px', borderRadius: '16px', border: scannedDoc ? 'none' : '2px dashed rgba(255,255,255,0.3)',
+                                backgroundColor: scannedDoc ? 'var(--primary)' : 'rgba(0,0,0,0.1)',
+                                color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            {scannedDoc ? <CheckCircle size={18} /> : <FileSearch size={18} />}
+                            <span style={{ fontSize: '0.75rem', fontWeight: '700' }}>Ordonnance</span>
+                        </button>
+
+                        <button
+                            onClick={() => setUseSignature(!useSignature)}
+                            style={{
+                                padding: '12px', borderRadius: '16px', border: 'none',
+                                backgroundColor: useSignature ? '#8b5cf6' : 'rgba(0,0,0,0.1)',
+                                color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px',
+                                transition: 'all 0.2s', opacity: selectedPatient ? 1 : 0.5
+                            }}
+                            disabled={!selectedPatient}
+                        >
+                            <PenTool size={18} />
+                            <span style={{ fontSize: '0.75rem', fontWeight: '700' }}>{useSignature ? 'Sign. Active' : 'Sans Signature'}</span>
+                        </button>
+                    </div>
                 </div>
 
                 <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
@@ -516,11 +577,18 @@ export default function POS() {
                         <button onClick={() => startMobilePayment('om')} style={{ padding: '16px', borderRadius: '16px', border: '2px solid #FF6600', background: 'white', color: '#FF6600', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}><OMIcon /> ORANGE</button>
                     </div>
                     <button
-                        onClick={() => { setShowCheckout(true); setShowNumpad(true); }}
+                        onClick={() => {
+                            if (useSignature && selectedPatient && !signatureCaptured) {
+                                setIsSigning(true);
+                            } else {
+                                setShowCheckout(true);
+                                setShowNumpad(true);
+                            }
+                        }}
                         disabled={cart.length === 0}
                         style={{ width: '100%', padding: '20px', borderRadius: '18px', border: 'none', backgroundColor: cart.length === 0 ? '#cbd5e1' : 'var(--primary)', color: 'white', fontWeight: '900', fontSize: '1.2rem', cursor: 'pointer', boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.3)', transition: 'all 0.2s' }}
                     >
-                        ENCAISSER EN ESPÈCES
+                        {useSignature && !signatureCaptured ? 'SIGNER & ENCAISSER' : 'ENCAISSER EN ESPÈCES'}
                     </button>
                 </div>
 
@@ -546,8 +614,6 @@ export default function POS() {
                                 )}
                             </div>
                         )}
-
-                        {mobileStatus === 'pending' && <p style={{ textAlign: 'center', fontWeight: '700' }}>En attente mobile...</p>}
 
                         {(showCheckout || (mobilePayment === 'om' && mobileStatus === 'idle')) && <Numpad onInput={handleNumpadInput} onDelete={() => showCheckout ? setCashAmount(prev => prev.slice(0, -1)) : setPhoneNumber(prev => prev.slice(0, -1))} onClear={() => showCheckout ? setCashAmount('') : setPhoneNumber('')} />}
 
