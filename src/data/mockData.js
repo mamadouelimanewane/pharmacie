@@ -1,14 +1,14 @@
 export const MOCK_PRODUCTS = [
-    { id: 1, name: 'Doliprane 1000mg', category: 'Antalgique', stock: 245, minStock: 50, price: 2500, status: 'Normal', code: '3400930001', location: 'A-12', labs: 'Sanofi' },
-    { id: 2, name: 'Amoxicilline 1g', category: 'Antibiotique', stock: 12, minStock: 25, price: 4500, status: 'Critique', code: '3400930002', location: 'Frigo-1', labs: 'Biogaran' },
-    { id: 3, name: 'Spasfon Lyoc', category: 'Antispasmodique', stock: 85, minStock: 30, price: 3200, status: 'Normal', code: '3400930003', location: 'B-04', labs: 'Teva' },
-    { id: 4, name: 'Maxilase Sirop', category: 'ORL', stock: 4, minStock: 15, price: 3800, status: 'Rupture Proche', code: '3400930004', location: 'A-08', labs: 'Sanofi' },
-    { id: 5, name: 'Gaviscon Pro', category: 'Gastrique', stock: 110, minStock: 25, price: 5500, status: 'Normal', code: '3400930005', location: 'C-15', labs: 'Reckitt' },
-    { id: 6, name: 'Aerius 5mg', category: 'Antihistaminique', stock: 32, minStock: 15, price: 2800, status: 'Normal', code: '3400930006', location: 'B-22', labs: 'MSD' },
-    { id: 7, name: 'Ventoline Inhalateur', category: 'Asthme', stock: 18, minStock: 20, price: 4200, status: 'Critique', code: '3400930007', location: 'A-01', labs: 'GSK' },
-    { id: 8, name: 'Eludril Solution', category: 'Hygiène Buccale', stock: 45, minStock: 10, price: 4800, status: 'Normal', code: '3400930008', location: 'P-05', labs: 'Pierre Fabre' },
-    { id: 9, name: 'Biafine Émulsion', category: 'Dermatologie', stock: 60, minStock: 15, price: 6200, status: 'Normal', code: '3400930009', location: 'P-12', labs: 'Johnson & Johnson' },
-    { id: 10, name: 'Magné B6', category: 'Complément', stock: 120, minStock: 40, price: 7500, status: 'Normal', code: '3400930010', location: 'C-02', labs: 'Sanofi' }
+    { id: 1, name: 'Doliprane 1000mg', category: 'Antalgique', stock: 245, minStock: 50, price: 2500, costPrice: 1500, status: 'Normal', code: '3400930001', location: 'A-12', labs: 'Sanofi', expiry: '2026-12-01' },
+    { id: 2, name: 'Amoxicilline 1g', category: 'Antibiotique', stock: 12, minStock: 25, price: 4500, costPrice: 2800, status: 'Critique', code: '3400930002', location: 'Frigo-1', labs: 'Biogaran', expiry: '2026-05-15' },
+    { id: 3, name: 'Spasfon Lyoc', category: 'Antispasmodique', stock: 85, minStock: 30, price: 3200, costPrice: 1900, status: 'Normal', code: '3400930003', location: 'B-04', labs: 'Teva', expiry: '2027-02-10' },
+    { id: 4, name: 'Maxilase Sirop', category: 'ORL', stock: 4, minStock: 15, price: 3800, costPrice: 2300, status: 'Rupture Proche', code: '3400930004', location: 'A-08', labs: 'Sanofi', expiry: '2026-03-20' },
+    { id: 5, name: 'Gaviscon Pro', category: 'Gastrique', stock: 110, minStock: 25, price: 5500, costPrice: 3200, status: 'Normal', code: '3400930005', location: 'C-15', labs: 'Reckitt', expiry: '2026-08-11' },
+    { id: 6, name: 'Aerius 5mg', category: 'Antihistaminique', stock: 32, minStock: 15, price: 2800, costPrice: 1600, status: 'Normal', code: '3400930006', location: 'B-22', labs: 'MSD', expiry: '2026-11-20' },
+    { id: 7, name: 'Ventoline Inhalateur', category: 'Asthme', stock: 18, minStock: 20, price: 4200, costPrice: 2500, status: 'Critique', code: '3400930007', location: 'A-01', labs: 'GSK', expiry: '2026-04-10' },
+    { id: 8, name: 'Eludril Solution', category: 'Hygiène Buccale', stock: 45, minStock: 10, price: 4800, costPrice: 2800, status: 'Normal', code: '3400930008', location: 'P-05', labs: 'Pierre Fabre', expiry: '2027-01-05' },
+    { id: 9, name: 'Biafine Émulsion', category: 'Dermatologie', stock: 60, minStock: 15, price: 6200, costPrice: 3400, status: 'Normal', code: '3400930009', location: 'P-12', labs: 'Johnson & Johnson', expiry: '2026-10-30' },
+    { id: 10, name: 'Magné B6', category: 'Complément', stock: 120, minStock: 40, price: 7500, costPrice: 4200, status: 'Normal', code: '3400930010', location: 'C-02', labs: 'Sanofi', expiry: '2027-03-12' }
 ];
 
 export const MOCK_PATIENTS = [

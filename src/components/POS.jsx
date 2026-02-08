@@ -5,9 +5,9 @@ import {
     Delete, ArrowLeft, History, User, Settings,
     Power, ChevronRight, Hash, Star, Smartphone,
     QrCode, Loader2, CheckCircle2, Barcode, Unlock,
-    Mail, FileText, Download, Clock, RotateCcw
+    Mail, FileText, Download, Clock, RotateCcw, UserPlus
 } from 'lucide-react';
-import { MOCK_PRODUCTS } from '../data/mockData';
+import { MOCK_PRODUCTS, MOCK_PATIENTS } from '../data/mockData';
 
 const CATEGORIES = ['Tous', 'Antalgique', 'Antibiotique', 'ORL', 'Complement', 'Hygiene'];
 
@@ -75,6 +75,8 @@ export default function POS() {
     const [printOption, setPrintOption] = useState(true);
     const [showReceipt, setShowReceipt] = useState(false);
     const [showHistory, setShowHistory] = useState(false);
+    const [showPatientSelect, setShowPatientSelect] = useState(false);
+    const [selectedPatient, setSelectedPatient] = useState(null);
     const [lastSale, setLastSale] = useState(null);
     const [salesHistory, setSalesHistory] = useState([]);
 
@@ -98,6 +100,10 @@ export default function POS() {
     };
 
     const addToCart = (product) => {
+        if (product.stock <= 0) {
+            alert('Produit en rupture de stock !');
+            return;
+        }
         setCart(prev => {
             const existing = prev.find(item => item.id === product.id);
             if (existing) {
@@ -150,6 +156,7 @@ export default function POS() {
             id: 'TK-' + Math.floor(Math.random() * 9999),
             items: [...cart],
             total: total,
+            patient: selectedPatient ? selectedPatient.name : 'Client Anonyme',
             date: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
             fullDate: new Date().toLocaleString(),
             paymentMethod: type === 'cash' ? 'ESPÈCES' : mobilePayment === 'wave' ? 'WAVE' : 'ORANGE MONEY',
@@ -179,11 +186,7 @@ export default function POS() {
         setShowNumpad(false);
         setShowReceipt(false);
         setLastSale(null);
-    };
-
-    const reprintTicket = (sale) => {
-        setLastSale(sale);
-        setShowReceipt(true);
+        setSelectedPatient(null);
     };
 
     return (
@@ -197,67 +200,48 @@ export default function POS() {
             borderRadius: 'var(--radius-lg)',
             position: 'relative'
         }}>
-            {/* Modal Historique des Ventes */}
-            {showHistory && (
-                <div style={{
-                    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 4000
-                }}>
-                    <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '20px', width: '600px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                            <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><History size={24} /> Derniers Tickets</h2>
-                            <button onClick={() => setShowHistory(false)} style={{ border: 'none', background: 'none' }}><X size={24} /></button>
+            {/* Modal Sélection Patient */}
+            {showPatientSelect && (
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 4000 }}>
+                    <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '20px', width: '450px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+                            <h2 style={{ fontSize: '1.2rem' }}>Rechercher un Patient</h2>
+                            <button onClick={() => setShowPatientSelect(false)} style={{ border: 'none', background: 'none' }}><X size={24} /></button>
                         </div>
-                        <div style={{ flex: 1, overflowY: 'auto' }}>
-                            {salesHistory.length === 0 ? (
-                                <p style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Aucune vente enregistrée aujourd'hui.</p>
-                            ) : (
-                                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                    <thead>
-                                        <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border)' }}>
-                                            <th style={{ padding: '12px' }}>Heure</th>
-                                            <th style={{ padding: '12px' }}>Ticket</th>
-                                            <th style={{ padding: '12px' }}>Mode</th>
-                                            <th style={{ padding: '12px' }}>Total</th>
-                                            <th style={{ padding: '12px' }}>Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {salesHistory.map((sale, i) => (
-                                            <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                                <td style={{ padding: '12px' }}>{sale.date}</td>
-                                                <td style={{ padding: '12px', fontWeight: '600' }}>{sale.id}</td>
-                                                <td style={{ padding: '12px' }}><span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '4px', backgroundColor: '#f1f5f9' }}>{sale.paymentMethod}</span></td>
-                                                <td style={{ padding: '12px', fontWeight: '700' }}>{sale.total.toLocaleString()} F</td>
-                                                <td style={{ padding: '12px' }}>
-                                                    <button onClick={() => reprintTicket(sale)} style={{ border: 'none', background: 'none', color: 'var(--primary)', cursor: 'pointer' }}><Printer size={18} /></button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            )}
+                        <input
+                            type="text"
+                            placeholder="Nom ou NSS..."
+                            style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid var(--border)', marginBottom: '15px' }}
+                        />
+                        <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                            {MOCK_PATIENTS.map(p => (
+                                <div
+                                    key={p.id}
+                                    onClick={() => { setSelectedPatient(p); setShowPatientSelect(false); }}
+                                    style={{ padding: '12px', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', borderRadius: '8px' }}
+                                    onMouseOver={(e) => e.target.style.backgroundColor = '#f8fafc'}
+                                    onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+                                >
+                                    <p style={{ fontWeight: '600' }}>{p.name}</p>
+                                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{p.mutuelle} - {p.phone}</p>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Modal Ticket de Caisse */}
+            {/* Modal Ticket */}
             {showReceipt && lastSale && (
-                <div style={{
-                    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000
-                }}>
-                    <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '16px', width: '380px', boxShadow: 'var(--shadow-lg)', position: 'relative' }}>
-                        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-                            <h2 style={{ fontSize: '1.2rem', marginBottom: '4px' }}>PHARMACIE DE LA TERRANGA</h2>
-                            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Mermoz, Dakar - Sénégal</p>
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000 }}>
+                    <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '16px', width: '380px' }}>
+                        <div style={{ textAlign: 'center', marginBottom: '15px' }}>
+                            <h2 style={{ fontSize: '1.2rem' }}>PHARMACIE DE LA TERRANGA</h2>
+                            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Ticket #{lastSale.id}</p>
                         </div>
-                        <div style={{ borderTop: '1px dashed #ccc', borderBottom: '1px dashed #ccc', padding: '10px 0', marginBottom: '15px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
-                                <span>Ticket : {lastSale.id}</span>
-                                <span>{lastSale.fullDate}</span>
-                            </div>
+                        <div style={{ borderTop: '1px dashed #ccc', borderBottom: '1px dashed #ccc', padding: '10px 0', marginBottom: '10px' }}>
+                            <p style={{ fontSize: '0.85rem' }}>Patient: <strong>{lastSale.patient}</strong></p>
+                            <p style={{ fontSize: '0.85rem' }}>Date: {lastSale.fullDate}</p>
                         </div>
                         <div style={{ marginBottom: '15px' }}>
                             {lastSale.items.map((item, i) => (
@@ -267,19 +251,15 @@ export default function POS() {
                                 </div>
                             ))}
                         </div>
-                        <div style={{ borderTop: '2px solid #000', paddingTop: '10px', marginBottom: '15px' }}>
+                        <div style={{ borderTop: '2px solid #000', paddingTop: '10px', marginBottom: '20px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '800', fontSize: '1.1rem' }}>
                                 <span>TOTAL</span>
                                 <span>{lastSale.total.toLocaleString()} FCFA</span>
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginTop: '10px', color: 'var(--text-muted)' }}>
-                                <span>Mode : {lastSale.paymentMethod}</span>
-                                {lastSale.paymentMethod === 'ESPÈCES' && <span>Reçu : {lastSale.cashReceived.toLocaleString()} F</span>}
-                            </div>
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                            <button onClick={() => { alert('Impression...'); setShowReceipt(false); if (salesHistory[0]?.id !== lastSale.id) setLastSale(null); }} style={{ padding: '12px', borderRadius: '10px', border: '1px solid var(--primary)', background: 'white', color: 'var(--primary)', fontWeight: '700' }}><Printer size={18} /> IMPRIMER</button>
-                            <button onClick={() => { alert('Envoyé !'); setShowReceipt(false); if (salesHistory[0]?.id !== lastSale.id) setLastSale(null); }} style={{ padding: '12px', borderRadius: '10px', border: 'none', background: 'var(--primary)', color: 'white', fontWeight: '700' }}><Mail size={18} /> E-MAIL</button>
+                            <button onClick={() => { alert('Impression...'); resetPOS(); }} style={{ padding: '12px', borderRadius: '10px', border: '1px solid var(--primary)', background: 'white', color: 'var(--primary)', fontWeight: '700' }}><Printer size={18} /> IMPRIMER</button>
+                            <button onClick={() => { alert('Email envoyé !'); resetPOS(); }} style={{ padding: '12px', borderRadius: '10px', background: 'var(--primary)', color: 'white', border: 'none', fontWeight: '700' }}><Mail size={18} /> E-MAIL</button>
                         </div>
                         <button onClick={resetPOS} style={{ width: '100%', marginTop: '10px', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>Fermer</button>
                     </div>
@@ -288,10 +268,7 @@ export default function POS() {
 
             {/* Notification Tiroir */}
             {drawerOpen && (
-                <div style={{
-                    position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-                    backgroundColor: 'rgba(15, 23, 42, 0.95)', color: 'white', padding: '30px 50px', borderRadius: '24px', zIndex: 2000, textAlign: 'center'
-                }}>
+                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', backgroundColor: 'rgba(15, 23, 42, 0.95)', color: 'white', padding: '30px 50px', borderRadius: '24px', zIndex: 2000, textAlign: 'center' }}>
                     <Unlock size={64} color="var(--primary)" style={{ marginBottom: '16px' }} />
                     <h2 style={{ color: 'white' }}>TIROIR OUVERT</h2>
                 </div>
@@ -304,7 +281,7 @@ export default function POS() {
                         <Search size={24} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                         <input
                             type="text"
-                            placeholder="Produit ou code-barres..."
+                            placeholder="Scannez ou recherchez un produit..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             style={{ width: '100%', padding: '16px 16px 16px 52px', borderRadius: '12px', border: '2px solid #e2e8f0', outline: 'none', fontSize: '1.1rem' }}
@@ -320,8 +297,24 @@ export default function POS() {
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '12px', overflowY: 'auto' }}>
                     {filteredProducts.map(p => (
-                        <button key={p.id} onClick={() => addToCart(p)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 12px', backgroundColor: 'white', borderRadius: '16px', border: '1px solid #e2e8f0', cursor: 'pointer' }}>
-                            <span style={{ fontWeight: '700', fontSize: '0.9rem', textAlign: 'center', marginBottom: '8px' }}>{p.name}</span>
+                        <button
+                            key={p.id}
+                            onClick={() => addToCart(p)}
+                            style={{
+                                display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '16px 12px',
+                                backgroundColor: 'white', borderRadius: '16px', border: p.stock <= p.minStock ? '1px solid #fee2e2' : '1px solid #e2e8f0',
+                                cursor: 'pointer', position: 'relative'
+                            }}
+                        >
+                            <span style={{
+                                position: 'absolute', top: '8px', right: '8px', fontSize: '0.65rem', padding: '2px 6px',
+                                borderRadius: '4px', backgroundColor: p.stock <= p.minStock ? '#fee2e2' : '#f1f5f9',
+                                color: p.stock <= p.minStock ? 'var(--error)' : 'var(--text-muted)',
+                                fontWeight: '700'
+                            }}>
+                                STK: {p.stock}
+                            </span>
+                            <span style={{ fontWeight: '700', fontSize: '0.9rem', textAlign: 'center', marginBottom: '8px', marginTop: '10px' }}>{p.name}</span>
                             <span style={{ fontWeight: '800', color: 'var(--primary)' }}>{p.price.toLocaleString()} F</span>
                         </button>
                     ))}
@@ -331,19 +324,30 @@ export default function POS() {
             {/* Colonne de Droite */}
             <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'white', borderRadius: 'var(--radius-md)', overflow: 'hidden', boxShadow: 'var(--shadow-md)' }}>
                 <div style={{ padding: '20px', backgroundColor: 'var(--secondary)', color: 'white' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                         <div>
                             <h2 style={{ fontSize: '1.25rem', fontWeight: '700' }}>Caisse N1</h2>
-                            <p style={{ fontSize: '0.75rem', opacity: 0.7 }}>Cassier : Dr. Wane</p>
+                            <p style={{ fontSize: '0.75rem', opacity: 0.7 }}>Dr. Wane</p>
                         </div>
-                        <div style={{ display: 'flex', gap: '6px' }}>
-                            <button onClick={() => setShowHistory(true)} style={{ padding: '10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'transparent', color: 'white', cursor: 'pointer' }}><History size={18} /></button>
-                            <div style={{ display: 'flex', gap: '4px', flexDirection: 'column' }}>
-                                <button onClick={() => setAutoDrawer(!autoDrawer)} style={{ padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: autoDrawer ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255,255,255,0.1)', color: 'white', fontSize: '0.65rem', cursor: 'pointer' }}>TIROIR: {autoDrawer ? 'AUTO' : 'OFF'}</button>
-                                <button onClick={() => setPrintOption(!printOption)} style={{ padding: '4px 8px', borderRadius: '4px', border: 'none', backgroundColor: printOption ? 'rgba(6, 182, 212, 0.3)' : 'rgba(255,255,255,0.1)', color: 'white', fontSize: '0.65rem', cursor: 'pointer' }}>TICKET: {printOption ? 'ON' : 'OFF'}</button>
-                            </div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            <button onClick={() => setShowHistory(true)} style={{ padding: '8px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'transparent', color: 'white', cursor: 'pointer' }}><History size={20} /></button>
                         </div>
                     </div>
+                    {/* Patient Selection bar */}
+                    <button
+                        onClick={() => setShowPatientSelect(true)}
+                        style={{
+                            width: '100%', padding: '10px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.2)',
+                            backgroundColor: selectedPatient ? 'rgba(16, 185, 129, 0.2)' : 'rgba(0,0,0,0.1)',
+                            color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px'
+                        }}
+                    >
+                        {selectedPatient ? <ShieldCheck size={18} color="var(--success)" /> : <UserPlus size={18} />}
+                        <span style={{ fontSize: '0.85rem', fontWeight: '600' }}>
+                            {selectedPatient ? selectedPatient.name : 'Associer un Patient'}
+                        </span>
+                        {selectedPatient && <X size={14} style={{ marginLeft: 'auto' }} onClick={(e) => { e.stopPropagation(); setSelectedPatient(null); }} />}
+                    </button>
                 </div>
 
                 <div style={{ flex: 1, overflowY: 'auto', padding: '12px' }}>
@@ -379,10 +383,9 @@ export default function POS() {
                                 {parseInt(cashAmount) >= total && <p style={{ textAlign: 'right', color: 'green', fontWeight: '700' }}>Rendu : {(parseInt(cashAmount) - total).toLocaleString()} F</p>}
                             </div>
                         )}
-                        {mobilePayment === 'wave' && <div style={{ textAlign: 'center', padding: '20px' }}>{mobileStatus === 'pending' ? <><QrCode size={100} color="#1dcad3" /><p>Scan QR...</p></> : <p style={{ color: 'green', fontWeight: '700' }}>Reçu !</p>}</div>}
-                        {mobilePayment === 'om' && <div style={{ textAlign: 'center' }}>{mobileStatus === 'idle' ? <><p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#FF6600' }}>{phoneNumber || 'Numéro OM'}</p><button disabled={phoneNumber.length < 9} onClick={() => setMobileStatus('pending')} style={{ width: '100%', padding: '12px', background: '#FF6600', color: 'white', border: 'none', borderRadius: '8px', marginTop: '12px' }}>VALIDER PUSH</button></> : mobileStatus === 'pending' ? <p>Attente client...</p> : <p style={{ color: 'green', fontWeight: '700' }}>Succès OM !</p>}</div>}
+                        {mobilePayment === 'om' && <div style={{ textAlign: 'center' }}>{mobileStatus === 'idle' ? <><p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#FF6600' }}>{phoneNumber || 'Numéro OM'}</p><button disabled={phoneNumber.length < 9} onClick={() => setMobileStatus('pending')} style={{ width: '100%', padding: '12px', background: '#FF6600', color: 'white', border: 'none', borderRadius: '8px', marginTop: '12px' }}>VALIDER</button></> : <p>Confirmation...</p>}</div>}
                         {(showCheckout || (mobilePayment === 'om' && mobileStatus === 'idle')) && <Numpad onInput={handleNumpadInput} onDelete={() => showCheckout ? setCashAmount(prev => prev.slice(0, -1)) : setPhoneNumber(prev => prev.slice(0, -1))} onClear={() => showCheckout ? setCashAmount('') : setPhoneNumber('')} />}
-                        {((showCheckout && parseInt(cashAmount) >= total) || mobileStatus === 'success') && <button onClick={() => finalizePayment(showCheckout ? 'cash' : 'mobile')} style={{ width: '100%', padding: '16px', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 'bold', marginTop: '16px' }}>CONCLURE LA VENTE</button>}
+                        {((showCheckout && parseInt(cashAmount) >= total) || mobileStatus === 'success') && <button onClick={() => finalizePayment(showCheckout ? 'cash' : 'mobile')} style={{ width: '100%', padding: '16px', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 'bold', marginTop: '16px' }}>CONCLURE</button>}
                     </div>
                 )}
             </div>
