@@ -97,6 +97,19 @@ export default function POS() {
     const [substituteResults, setSubstituteResults] = useState([]);
     const [isSearchingSubstitutes, setIsSearchingSubstitutes] = useState(false);
 
+    // Cash Management Session State
+    const [showCashModal, setShowCashModal] = useState(false);
+    const [cashSession, setCashSession] = useState({
+        status: 'open', // 'open', 'closed'
+        startTime: new Date().toLocaleTimeString(),
+        initialAmount: 25000, // Fond de caisse
+        currentCash: 25000,
+        entries: [], // { type: 'in' | 'out', amount, reason, time }
+        totalMobileMoney: 0,
+        totalTiersPayant: 0
+    });
+    const [cashAction, setCashAction] = useState({ type: 'in', amount: '', reason: '' });
+
     // Barcode Scanner logic
     const barcodeBuffer = useRef('');
     const lastKeyTime = useRef(0);
@@ -296,10 +309,36 @@ export default function POS() {
 
         if (type === 'cash' && autoDrawer) triggerDrawer();
 
+        // Update Cash Session
+        setCashSession(prev => ({
+            ...prev,
+            currentCash: type === 'cash' ? prev.currentCash + patientShare : prev.currentCash,
+            totalMobileMoney: type === 'mobile' ? prev.totalMobileMoney + patientShare : prev.totalMobileMoney,
+            totalTiersPayant: prev.totalTiersPayant + insuranceShare
+        }));
+
         setSalesHistory(prev => [saleData, ...prev].slice(0, 50));
         setLastSale(saleData);
         if (printOption) setShowReceipt(true);
         else resetPOS();
+    };
+
+    const handleCashTransaction = () => {
+        const amt = parseInt(cashAction.amount);
+        if (isNaN(amt) || amt <= 0) return;
+
+        setCashSession(prev => ({
+            ...prev,
+            currentCash: cashAction.type === 'in' ? prev.currentCash + amt : prev.currentCash - amt,
+            entries: [...prev.entries, {
+                id: Math.random(),
+                type: cashAction.type,
+                amount: amt,
+                reason: cashAction.reason || (cashAction.type === 'in' ? 'Apport' : 'Prélèvement'),
+                time: new Date().toLocaleTimeString()
+            }]
+        }));
+        setCashAction({ type: 'in', amount: '', reason: '' });
     };
 
     const resetPOS = () => {
@@ -632,8 +671,16 @@ export default function POS() {
             <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'white', borderRadius: '28px', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
                 <div style={{ padding: '24px', backgroundColor: 'var(--secondary)', color: 'white' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                        <div><h2 style={{ fontSize: '1.4rem', fontWeight: '900' }}>Caisse N1</h2><p style={{ fontSize: '0.8rem', opacity: 0.7, fontWeight: '600' }}>Dr. Wane • Officine</p></div>
-                        <div style={{ display: 'flex', gap: '8px' }}><button onClick={() => setShowHistory(true)} style={{ padding: '12px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'rgba(255,255,255,0.1)', color: 'white', cursor: 'pointer' }}><History size={24} /></button></div>
+                        <div onClick={() => setShowCashModal(true)} style={{ cursor: 'pointer' }}>
+                            <h2 style={{ fontSize: '1.4rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                Caisse N1 <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: cashSession.status === 'open' ? '#10b981' : '#ef4444' }}></div>
+                            </h2>
+                            <p style={{ fontSize: '0.8rem', opacity: 0.7, fontWeight: '600' }}>{cashSession.currentCash.toLocaleString()} F en caisse</p>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            <button onClick={() => setShowCashModal(true)} style={{ padding: '12px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'rgba(255,255,255,0.1)', color: 'white', cursor: 'pointer' }}><Banknote size={24} /></button>
+                            <button onClick={() => setShowHistory(true)} style={{ padding: '12px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'rgba(255,255,255,0.1)', color: 'white', cursor: 'pointer' }}><History size={24} /></button>
+                        </div>
                     </div>
 
                     {/* Patient & IA Widget Sidebar */}
@@ -751,6 +798,97 @@ export default function POS() {
                     </div>
                 )}
             </div>
+            {/* Modal Gestion de Caisse Overlay */}
+            {showCashModal && (
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9000, backdropFilter: 'blur(10px)' }}>
+                    <div style={{ backgroundColor: 'white', borderRadius: '32px', width: '850px', display: 'grid', gridTemplateColumns: '1.2fr 1fr', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
+                        <div style={{ padding: '40px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+                                <div>
+                                    <h2 style={{ fontSize: '1.8rem', fontWeight: '900', color: 'var(--secondary)' }}>Gestion de Caisse</h2>
+                                    <p style={{ color: 'var(--text-muted)', fontWeight: '600' }}>Session ouverte à {cashSession.startTime}</p>
+                                </div>
+                                <button onClick={() => setShowCashModal(false)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}><X size={32} /></button>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
+                                <div style={{ padding: '20px', borderRadius: '24px', backgroundColor: '#f0fdf4', border: '1px solid #16a34a' }}>
+                                    <p style={{ fontSize: '0.75rem', fontWeight: '800', color: '#166534', marginBottom: '8px' }}>SOLDE ESPÈCES</p>
+                                    <p style={{ fontSize: '1.8rem', fontWeight: '900', color: '#166534' }}>{cashSession.currentCash.toLocaleString()} F</p>
+                                </div>
+                                <div style={{ padding: '20px', borderRadius: '24px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                                    <p style={{ fontSize: '0.75rem', fontWeight: '800', color: '#64748b', marginBottom: '8px' }}>MOBILE MONEY</p>
+                                    <p style={{ fontSize: '1.8rem', fontWeight: '900', color: 'var(--secondary)' }}>{cashSession.totalMobileMoney.toLocaleString()} F</p>
+                                </div>
+                            </div>
+
+                            <h3 style={{ fontSize: '1rem', fontWeight: '900', marginBottom: '16px' }}>Mouvements de Caisse</h3>
+                            <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+                                <select value={cashAction.type} onChange={(e) => setCashAction({ ...cashAction, type: e.target.value })} style={{ padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0', background: '#f8fafc', fontWeight: '700' }}>
+                                    <option value="in">Entrée (+)</option>
+                                    <option value="out">Sortie (-)</option>
+                                </select>
+                                <input type="number" placeholder="Montant" value={cashAction.amount} onChange={(e) => setCashAction({ ...cashAction, amount: e.target.value })} style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0', fontWeight: '700' }} />
+                                <button onClick={handleCashTransaction} style={{ padding: '0 24px', backgroundColor: 'var(--primary)', color: 'white', border: 'none', borderRadius: '12px', fontWeight: '800', cursor: 'pointer' }}>VALIDER</button>
+                            </div>
+                            <input type="text" placeholder="Motif du mouvement..." value={cashAction.reason} onChange={(e) => setCashAction({ ...cashAction, reason: e.target.value })} style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '32px' }} />
+
+                            <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                                {cashSession.entries.map(entry => (
+                                    <div key={entry.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: entry.type === 'in' ? '#dcfce7' : '#fee2e2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                {entry.type === 'in' ? <Plus size={16} color="#16a34a" /> : <Minus size={16} color="#ef4444" />}
+                                            </div>
+                                            <div>
+                                                <p style={{ fontSize: '0.85rem', fontWeight: '700' }}>{entry.reason}</p>
+                                                <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{entry.time}</p>
+                                            </div>
+                                        </div>
+                                        <p style={{ fontWeight: '800', color: entry.type === 'in' ? '#16a34a' : '#ef4444' }}>{entry.type === 'in' ? '+' : '-'}{entry.amount.toLocaleString()} F</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div style={{ backgroundColor: '#f8fafc', padding: '40px', borderLeft: '1px solid #e2e8f0' }}>
+                            <h3 style={{ fontSize: '1.2rem', fontWeight: '900', marginBottom: '24px' }}>Rapport X (Mi-journée)</h3>
+                            <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '24px', border: '1px solid #e2e8f0', marginBottom: '24px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                                    <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>Fonds de départ</span>
+                                    <span style={{ fontWeight: '700' }}>{cashSession.initialAmount.toLocaleString()} F</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                                    <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>Ventes Espèces</span>
+                                    <span style={{ fontWeight: '700' }}>{(cashSession.currentCash - cashSession.initialAmount).toLocaleString()} F</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                                    <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>Total Tiers-Payant</span>
+                                    <span style={{ fontWeight: '700' }}>{cashSession.totalTiersPayant.toLocaleString()} F</span>
+                                </div>
+                                <div style={{ borderTop: '1px dashed #cbd5e1', paddingTop: '12px', marginTop: '12px', display: 'flex', justifyContent: 'space-between' }}>
+                                    <span style={{ fontWeight: '900' }}>TOTAL THÉORIQUE</span>
+                                    <span style={{ fontWeight: '900', color: 'var(--primary)' }}>{(cashSession.currentCash + cashSession.totalMobileMoney).toLocaleString()} F</span>
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <button style={{ width: '100%', padding: '16px', borderRadius: '16px', backgroundColor: 'white', border: '2px solid var(--secondary)', color: 'var(--secondary)', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                                    <Printer size={20} /> IMPRIMER RAPPORT X
+                                </button>
+                                <button onClick={() => alert('Clôture de caisse activée...')} style={{ width: '100%', padding: '16px', borderRadius: '16px', backgroundColor: '#ef4444', border: 'none', color: 'white', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 10px 15px -3px rgba(239, 68, 68, 0.3)' }}>
+                                    <Power size={20} /> CLÔTURER LA CAISSE (Z)
+                                </button>
+                            </div>
+
+                            <div style={{ marginTop: '32px', padding: '16px', backgroundColor: '#fefce8', borderRadius: '16px', border: '1px solid #fef08a', display: 'flex', gap: '12px' }}>
+                                <AlertTriangle color="#a16207" size={20} />
+                                <p style={{ fontSize: '0.8rem', color: '#a16207', fontWeight: '600' }}>Pensez à retirer les espèces dépassant 100 000 F pour des raisons de sécurité.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
             <style>{` @keyframes scanMove { 0% { top: 0; } 50% { top: 100%; } 100% { top: 0; } } `}</style>
         </div>
     );
