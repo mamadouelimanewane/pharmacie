@@ -4,23 +4,36 @@ import {
     UserCheck, AlertCircle, FileText, DollarSign,
     TrendingUp, Briefcase, Award, ShieldCheck,
     Download, Eye, Settings, Search, CheckCircle2,
-    X, ChevronRight, UserPlus, FileCheck, Mail
+    X, ChevronRight, UserPlus, FileCheck, Mail,
+    Stethoscope, Sun, Umbrella, MessageSquare,
+    Check
 } from 'lucide-react';
 import { MOCK_STAFF } from '../data/mockData';
 
 export default function Planning() {
-    const [activeView, setActiveView] = useState('planning'); // 'planning', 'staff', 'payroll', 'documents'
+    const [activeView, setActiveView] = useState('planning'); // 'planning', 'staff', 'leave', 'payroll', 'documents'
     const [showStaffModal, setShowStaffModal] = useState(false);
+    const [selectedMember, setSelectedMember] = useState(null);
+
+    const LEAVE_REQUESTS = [
+        { id: 1, name: 'Fatou Sow', type: 'Congés Payés', start: '15/02/2026', end: '22/02/2026', days: 7, status: 'En attente', reason: 'Vacances familiales' },
+        { id: 2, name: 'Cheikh Tidiane', type: 'Maladie', start: '08/02/2026', end: '10/02/2026', days: 3, status: 'Validé', reason: 'Grippe saisonnière' },
+        { id: 3, name: 'Dr. Ramatoulaye', type: 'Formation', start: '12/02/2026', end: '13/02/2026', days: 2, status: 'Validé', reason: 'Séminaire Pharmacie' },
+    ];
 
     return (
         <div className="planning fade-in" style={{ paddingBottom: '2rem' }}>
             <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                 <div>
                     <h1 style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--secondary)' }}>
-                        {activeView === 'planning' ? 'Planning Officine' : activeView === 'staff' ? 'Gestion du Personnel' : activeView === 'payroll' ? 'Simulation de Paie' : 'Documents & Contrats'}
+                        {activeView === 'planning' ? 'Planning Officine' :
+                            activeView === 'staff' ? 'Gestion du Personnel' :
+                                activeView === 'leave' ? 'Congés & Absences' :
+                                    activeView === 'payroll' ? 'Simulation de Paie' : 'Documents & Contrats'}
                     </h1>
                     <p style={{ color: 'var(--text-muted)' }}>
-                        Pilotage RH de l'équipe officinale : roulements, rémunérations et conformité sociale.
+                        {activeView === 'leave' ? 'Gestion centralisée des congés, arrêts maladie et absences exceptionnelles.' :
+                            'Pilotage RH de l\'équipe officinale : roulements, rémunérations et conformité sociale.'}
                     </p>
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem' }}>
@@ -28,7 +41,7 @@ export default function Planning() {
                         <Download size={18} /> Rapports RH
                     </button>
                     <button onClick={() => setShowStaffModal(true)} style={{ padding: '0.75rem 1.25rem', borderRadius: '12px', border: 'none', backgroundColor: 'var(--primary)', color: 'white', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <UserPlus size={18} /> Ajouter Collaborateur
+                        <UserPlus size={18} /> {activeView === 'leave' ? 'Nouvelle Demande' : 'Ajouter Collaborateur'}
                     </button>
                 </div>
             </header>
@@ -38,6 +51,7 @@ export default function Planning() {
                 {[
                     { id: 'planning', label: 'Rotations & Pauses', icon: CalendarDays },
                     { id: 'staff', label: 'Annuaire Équipe', icon: UserCircle },
+                    { id: 'leave', label: 'Congés & Maladies', icon: Umbrella },
                     { id: 'payroll', label: 'Paie & Primes', icon: DollarSign },
                     { id: 'documents', label: 'Centre de Documents', icon: FileCheck }
                 ].map(tab => (
@@ -172,6 +186,102 @@ export default function Planning() {
                                 </div>
                             </div>
                         ))}
+                    </div>
+                </div>
+            )}
+
+            {activeView === 'leave' && (
+                <div className="fade-in">
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '2rem' }}>
+                        <div className="card" style={{ borderLeft: '4px solid #3b82f6' }}>
+                            <p style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '8px' }}>CONGÉS EN COURS</p>
+                            <p style={{ fontSize: '1.8rem', fontWeight: '900', color: 'var(--secondary)' }}>2</p>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#3b82f6', fontSize: '0.8rem', marginTop: '8px', fontWeight: '600' }}>
+                                <Sun size={14} /> Fatou, Cheikh
+                            </div>
+                        </div>
+                        <div className="card" style={{ borderLeft: '4px solid #ef4444' }}>
+                            <p style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '8px' }}>ARRÊTS MALADIE</p>
+                            <p style={{ fontSize: '1.8rem', fontWeight: '900', color: '#ef4444' }}>1</p>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#ef4444', fontSize: '0.8rem', marginTop: '8px', fontWeight: '600' }}>
+                                <Stethoscope size={14} /> Mamadou K.
+                            </div>
+                        </div>
+                        <div className="card" style={{ borderLeft: '4px solid #f59e0b' }}>
+                            <p style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '8px' }}>DEMANDES À VALIDER</p>
+                            <p style={{ fontSize: '1.8rem', fontWeight: '900', color: '#f59e0b' }}>3</p>
+                            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '8px' }}>Action requise</p>
+                        </div>
+                        <div className="card" style={{ background: '#f0f9ff', border: 'none' }}>
+                            <p style={{ fontSize: '0.75rem', fontWeight: '800', color: '#0369a1', marginBottom: '8px' }}>INDICE D'ABSENTÉISME</p>
+                            <p style={{ fontSize: '1.8rem', fontWeight: '900', color: '#0369a1' }}>2.1%</p>
+                            <p style={{ fontSize: '0.8rem', color: '#16a34a', marginTop: '8px', fontWeight: '700' }}>Stable (Sous 5%)</p>
+                        </div>
+                    </div>
+
+                    <div className="card" style={{ padding: 0 }}>
+                        <div style={{ padding: '24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <h3 style={{ fontWeight: '900', display: 'flex', alignItems: 'center', gap: '10px' }}><Umbrella size={20} color="var(--primary)" /> Gestion des Congés & Absences</h3>
+                            <button className="glass" style={{ padding: '8px 16px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '800' }}>Exporter Planning</button>
+                        </div>
+                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                            <thead style={{ backgroundColor: '#f8fafc' }}>
+                                <tr style={{ textAlign: 'left' }}>
+                                    <th style={{ padding: '20px', fontSize: '0.8rem', fontWeight: '900' }}>COLLABORATEUR</th>
+                                    <th style={{ fontSize: '0.8rem', fontWeight: '900' }}>TYPE D'ABSENCE</th>
+                                    <th style={{ fontSize: '0.8rem', fontWeight: '900' }}>PÉRIODE</th>
+                                    <th style={{ fontSize: '0.8rem', fontWeight: '900' }}>DURÉE</th>
+                                    <th style={{ fontSize: '0.8rem', fontWeight: '900' }}>STATUT</th>
+                                    <th style={{ padding: '20px', textAlign: 'right' }}>ACTIONS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {LEAVE_REQUESTS.map(req => (
+                                    <tr key={req.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                        <td style={{ padding: '20px' }}>
+                                            <div style={{ fontWeight: '800' }}>{req.name}</div>
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>{req.reason}</div>
+                                        </td>
+                                        <td>
+                                            <span style={{
+                                                display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700', fontSize: '0.85rem',
+                                                color: req.type === 'Maladie' ? '#ef4444' : req.type === 'Formation' ? '#8b5cf6' : '#3b82f6'
+                                            }}>
+                                                {req.type === 'Maladie' && <Stethoscope size={14} />}
+                                                {req.type === 'Congés Payés' && <Sun size={14} />}
+                                                {req.type === 'Formation' && <Briefcase size={14} />}
+                                                {req.type}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div style={{ fontWeight: '700' }}>{req.start} → {req.end}</div>
+                                        </td>
+                                        <td style={{ fontWeight: '800' }}>{req.days} jours</td>
+                                        <td>
+                                            <span style={{
+                                                padding: '6px 14px', borderRadius: '100px', fontSize: '0.75rem', fontWeight: '900',
+                                                backgroundColor: req.status === 'Validé' ? '#dcfce7' : '#fff7ed',
+                                                color: req.status === 'Validé' ? '#15803d' : '#9a3412'
+                                            }}>
+                                                {req.status.toUpperCase()}
+                                            </span>
+                                        </td>
+                                        <td style={{ padding: '20px', textAlign: 'right' }}>
+                                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                                {req.status === 'En attente' ? (
+                                                    <>
+                                                        <button style={{ padding: '8px', borderRadius: '8px', border: 'none', background: '#dcfce7', color: '#166534', cursor: 'pointer' }}><Check size={18} /></button>
+                                                        <button style={{ padding: '8px', borderRadius: '8px', border: 'none', background: '#fee2e2', color: '#991b1b', cursor: 'pointer' }}><X size={18} /></button>
+                                                    </>
+                                                ) : (
+                                                    <button style={{ padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white' }}><Eye size={18} /></button>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             )}
