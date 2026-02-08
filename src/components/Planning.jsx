@@ -14,6 +14,7 @@ export default function Planning() {
     const [activeView, setActiveView] = useState('planning'); // 'planning', 'staff', 'leave', 'payroll', 'documents'
     const [showStaffModal, setShowStaffModal] = useState(false);
     const [selectedMember, setSelectedMember] = useState(null);
+    const [replacementAnalysis, setReplacementAnalysis] = useState(null); // { absentMember, strategy }
 
     const LEAVE_REQUESTS = [
         { id: 1, name: 'Fatou Sow', type: 'Congés Payés', start: '15/02/2026', end: '22/02/2026', days: 7, status: 'En attente', reason: 'Vacances familiales' },
@@ -268,6 +269,14 @@ export default function Planning() {
                                         </td>
                                         <td style={{ padding: '20px', textAlign: 'right' }}>
                                             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                                {req.type === 'Maladie' && (
+                                                    <button
+                                                        onClick={() => setReplacementAnalysis({ absentMember: req.name, type: req.type })}
+                                                        style={{ padding: '8px', borderRadius: '8px', border: 'none', background: 'var(--secondary)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                                    >
+                                                        <TrendingUp size={16} /> IA Remplacement
+                                                    </button>
+                                                )}
                                                 {req.status === 'En attente' ? (
                                                     <>
                                                         <button style={{ padding: '8px', borderRadius: '8px', border: 'none', background: '#dcfce7', color: '#166534', cursor: 'pointer' }}><Check size={18} /></button>
@@ -282,6 +291,72 @@ export default function Planning() {
                                 ))}
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            )}
+
+            {/* AI Replacement Analysis Modal */}
+            {replacementAnalysis && (
+                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
+                    <div className="card fade-in" style={{ maxWidth: '700px', width: '100%', padding: '32px', position: 'relative', border: '1px solid var(--primary)' }}>
+                        <button onClick={() => setReplacementAnalysis(null)} style={{ position: 'absolute', top: '20px', right: '20px', padding: '8px', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                            <X size={24} />
+                        </button>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+                            <div style={{ width: '56px', height: '56px', borderRadius: '16px', backgroundColor: 'var(--secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+                                <TrendingUp size={32} />
+                            </div>
+                            <div>
+                                <h2 style={{ fontWeight: '900', fontSize: '1.4rem' }}>Analyse de Remplacement IA</h2>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Scénarios d'optimisation pour l'absence de <strong>{replacementAnalysis.absentMember}</strong></p>
+                            </div>
+                        </div>
+
+                        <div style={{ backgroundColor: '#fff7ed', border: '1px solid #ffedd5', padding: '16px', borderRadius: '14px', marginBottom: '24px', display: 'flex', gap: '12px' }}>
+                            <AlertCircle size={20} color="#ea580c" />
+                            <p style={{ fontSize: '0.85rem', color: '#9a3412', fontWeight: '600', lineHeight: '1.5' }}>
+                                L'absence prévue (3 jours) réduit votre couverture comptoir de <strong>20%</strong> sur la plage 14h-18h. Action recommandée : Rotation interne.
+                            </p>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '24px' }}>
+                            <div style={{ padding: '20px', borderRadius: '20px', border: '2px solid var(--primary)', position: 'relative' }}>
+                                <div style={{ position: 'absolute', top: '-12px', right: '12px', background: 'var(--primary)', color: 'white', padding: '2px 10px', borderRadius: '100px', fontSize: '0.65rem', fontWeight: '900' }}>IA RECOMMENDED</div>
+                                <h4 style={{ fontWeight: '900', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <UserCheck size={18} color="var(--primary)" /> Rotation Interne
+                                </h4>
+                                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <li style={{ fontSize: '0.8rem', fontWeight: '700', padding: '8px', background: '#f0fdf4', borderRadius: '8px' }}>✓ <strong>Mamadou K.</strong> : Prolonger shift +2h</li>
+                                    <li style={{ fontSize: '0.8rem', fontWeight: '700', padding: '8px', background: '#f0fdf4', borderRadius: '8px' }}>✓ <strong>Dr. Ramatoulaye</strong> : Reprise shift matin</li>
+                                </ul>
+                                <p style={{ fontSize: '0.75rem', marginTop: '12px', color: 'var(--text-muted)' }}>Coût estimé : <strong>+45 000 F</strong> (HS)</p>
+                                <button style={{ width: '100%', marginTop: '12px', padding: '10px', borderRadius: '10px', background: 'var(--primary)', color: 'white', border: 'none', fontWeight: '800', cursor: 'pointer' }}>Appliquer le Plan</button>
+                            </div>
+
+                            <div style={{ padding: '20px', borderRadius: '20px', border: '1px solid var(--border)' }}>
+                                <h4 style={{ fontWeight: '900', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <UserPlus size={18} color="var(--secondary)" /> Intérim / Remplaçant
+                                </h4>
+                                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
+                                    Recherche de remplaçants disponibles dans le réseau <strong>Sédar RH</strong>.
+                                </p>
+                                <div style={{ padding: '8px', border: '1px solid #f1f5f9', borderRadius: '10px', marginBottom: '12px' }}>
+                                    <p style={{ fontSize: '0.75rem', fontWeight: '800' }}>2 Profils trouvés</p>
+                                    <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Dispo : Immédiate</p>
+                                </div>
+                                <button style={{ width: '100%', padding: '10px', borderRadius: '10px', border: '1px solid var(--border)', background: 'white', fontWeight: '800', cursor: 'pointer' }}>Contacter Agence</button>
+                            </div>
+                        </div>
+
+                        <div className="card" style={{ background: '#f8fafc', padding: '16px' }}>
+                            <h4 style={{ fontSize: '0.85rem', fontWeight: '900', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <MessageSquare size={16} color="var(--primary)" /> Note de l'Assistant IA
+                            </h4>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                                "J'ai vérifié les certifications. <strong>Mamadou K.</strong> est le plus apte à remplacer Cheikh pour la dispensation des psychotropes car ses habilitations sont à jour."
+                            </p>
+                        </div>
                     </div>
                 </div>
             )}
