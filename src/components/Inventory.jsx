@@ -14,6 +14,10 @@ export default function Inventory() {
     const [searchTerm, setSearchTerm] = useState('');
     const [showOrderModal, setShowOrderModal] = useState(false);
     const [showReceiveModal, setShowReceiveModal] = useState(false);
+    const [activeView, setActiveView] = useState('logistic'); // 'logistic' or 'physical'
+    const [physicalInventory, setPhysicalInventory] = useState({});
+    const [inventoryLog, setInventoryLog] = useState([]);
+    const [isReconciling, setIsReconciling] = useState(false);
 
     // Delivery Reception State
     const [receivedItems, setReceivedItems] = useState([]);
@@ -76,12 +80,58 @@ export default function Inventory() {
         setShowReceiveModal(false);
     };
 
+    const handleCountChange = (productId, count) => {
+        setPhysicalInventory(prev => ({
+            ...prev,
+            [productId]: parseInt(count) || 0
+        }));
+    };
+
+    const commitInventory = () => {
+        setIsReconciling(true);
+        setTimeout(() => {
+            const corrections = Object.keys(physicalInventory).map(pid => {
+                const product = MOCK_PRODUCTS.find(p => p.id === parseInt(pid));
+                const diff = physicalInventory[pid] - product.stock;
+                return {
+                    id: Math.random(),
+                    date: new Date().toLocaleString(),
+                    product: product.name,
+                    oldStock: product.stock,
+                    newStock: physicalInventory[pid],
+                    difference: diff,
+                    status: diff === 0 ? 'Conforme' : diff > 0 ? 'Surplus' : 'Perte'
+                };
+            });
+
+            setInventoryLog(prev => [...corrections.filter(c => c.difference !== 0), ...prev]);
+            setPhysicalInventory({});
+            setIsReconciling(false);
+            alert("Inventaire physique validé et stocks mis à jour dans le grand livre.");
+        }, 2000);
+    };
+
     return (
         <div className="inventory fade-in">
             <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                 <div>
-                    <h1 style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--secondary)' }}>Gestion Logistique</h1>
-                    <p style={{ color: 'var(--text-muted)' }}>Contrôlez vos stocks et gérez les réservations expirées.</p>
+                    <h1 style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--secondary)' }}>
+                        {activeView === 'logistic' ? 'Gestion Logistique' : 'Inventaire Physique'}
+                    </h1>
+                    <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
+                        <button
+                            onClick={() => setActiveView('logistic')}
+                            style={{ background: 'none', border: 'none', color: activeView === 'logistic' ? 'var(--primary)' : 'var(--text-muted)', fontWeight: '800', cursor: 'pointer', borderBottom: activeView === 'logistic' ? '2px solid var(--primary)' : '2px solid transparent', paddingBottom: '4px' }}
+                        >
+                            Logistique & Réserves
+                        </button>
+                        <button
+                            onClick={() => setActiveView('physical')}
+                            style={{ background: 'none', border: 'none', color: activeView === 'physical' ? 'var(--primary)' : 'var(--text-muted)', fontWeight: '800', cursor: 'pointer', borderBottom: activeView === 'physical' ? '2px solid var(--primary)' : '2px solid transparent', paddingBottom: '4px' }}
+                        >
+                            Comptage Physique
+                        </button>
+                    </div>
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem' }}>
                     <button onClick={() => setShowReceiveModal(true)} style={{ padding: '0.85rem 1.5rem', borderRadius: '12px', border: 'none', backgroundColor: 'var(--primary)', color: 'white', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 4px 6px rgba(16, 185, 129, 0.2)' }}><Barcode size={20} /> Réception Livraison</button>
@@ -144,46 +194,139 @@ export default function Inventory() {
                 </div>
             </div>
 
-            {/* Main Inventory Table with Reservation Indicators */}
-            <div className="card" style={{ padding: 0, borderRadius: '24px', overflow: 'hidden' }}>
-                <div style={{ padding: '24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ position: 'relative', width: '350px' }}>
-                        <Search size={20} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                        <input type="text" placeholder="Rechercher une référence..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', padding: '14px 14px 14px 48px', borderRadius: '14px', border: '1px solid #e2e8f0', outline: 'none', fontSize: '1rem' }} />
+            {/* Main Content Toggle */}
+            {activeView === 'logistic' ? (
+                <div className="card" style={{ padding: 0, borderRadius: '24px', overflow: 'hidden' }}>
+                    <div style={{ padding: '24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ position: 'relative', width: '350px' }}>
+                            <Search size={20} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                            <input type="text" placeholder="Rechercher une référence..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', padding: '14px 14px 14px 48px', borderRadius: '14px', border: '1px solid #e2e8f0', outline: 'none', fontSize: '1rem' }} />
+                        </div>
+                    </div>
+                    <table className="data-table">
+                        <thead>
+                            <tr>
+                                <th style={{ padding: '20px' }}>Produit / Labo</th>
+                                <th>Stock Réel</th>
+                                <th>Réserves</th>
+                                <th>État</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {MOCK_PRODUCTS.slice(0, 10).map(p => {
+                                const activeRes = reservedList.filter(r => r.product.toLowerCase().includes(p.name.toLowerCase()) && r.status === 'active');
+                                const expiredRes = reservedList.filter(r => r.product.toLowerCase().includes(p.name.toLowerCase()) && r.status === 'expired');
+
+                                return (
+                                    <tr key={p.id}>
+                                        <td style={{ padding: '18px 20px' }}><div style={{ fontWeight: '700' }}>{p.name}</div><div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{p.labs}</div></td>
+                                        <td><span style={{ fontWeight: '800' }}>{p.stock}</span></td>
+                                        <td>
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                {activeRes.length > 0 && <span style={{ padding: '4px 8px', borderRadius: '6px', background: '#f5f3ff', color: '#8b5cf6', fontSize: '0.7rem', fontWeight: '800' }}>{activeRes.length} ACTIVE</span>}
+                                                {expiredRes.length > 0 && <span style={{ padding: '4px 8px', borderRadius: '6px', background: '#fef2f2', color: '#ef4444', fontSize: '0.7rem', fontWeight: '800' }}>{expiredRes.length} EXPIRÉE</span>}
+                                                {activeRes.length === 0 && expiredRes.length === 0 && <span style={{ opacity: 0.3 }}>-</span>}
+                                            </div>
+                                        </td>
+                                        <td><span style={{ padding: '6px 12px', borderRadius: '100px', fontSize: '0.7rem', fontWeight: '800', backgroundColor: p.status === 'Normal' ? '#f0fdf4' : '#fef2f2', color: p.status === 'Normal' ? '#15803d' : '#b91c1c' }}>{p.status.toUpperCase()}</span></td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1fr', gap: '2rem' }}>
+                    <div className="card" style={{ padding: 0, borderRadius: '24px', overflow: 'hidden' }}>
+                        <div style={{ padding: '24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
+                            <h3 style={{ fontWeight: '900', fontSize: '1.1rem' }}>Saisie des Écarts</h3>
+                            <button
+                                onClick={commitInventory}
+                                disabled={Object.keys(physicalInventory).length === 0 || isReconciling}
+                                style={{ padding: '0.75rem 1.5rem', borderRadius: '12px', backgroundColor: 'var(--secondary)', color: 'white', fontWeight: '800', border: 'none', cursor: 'pointer', opacity: (Object.keys(physicalInventory).length === 0 || isReconciling) ? 0.5 : 1 }}
+                            >
+                                {isReconciling ? 'Rapprochement...' : 'Valider l\'Inventaire'}
+                            </button>
+                        </div>
+                        <table className="data-table">
+                            <thead>
+                                <tr>
+                                    <th style={{ padding: '20px' }}>Produit</th>
+                                    <th>Système</th>
+                                    <th>Physique</th>
+                                    <th>Écart</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {MOCK_PRODUCTS.slice(0, 8).map(p => {
+                                    const physical = physicalInventory[p.id] !== undefined ? physicalInventory[p.id] : p.stock;
+                                    const diff = physical - p.stock;
+                                    return (
+                                        <tr key={p.id}>
+                                            <td style={{ padding: '16px 20px' }}>
+                                                <div style={{ fontWeight: '800' }}>{p.name}</div>
+                                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{p.ean}</div>
+                                            </td>
+                                            <td style={{ fontWeight: '700', fontSize: '1.1rem' }}>{p.stock}</td>
+                                            <td>
+                                                <input
+                                                    type="number"
+                                                    value={physicalInventory[p.id] || ''}
+                                                    placeholder={p.stock}
+                                                    onChange={(e) => handleCountChange(p.id, e.target.value)}
+                                                    style={{ width: '80px', padding: '10px', borderRadius: '10px', border: '2px solid #e2e8f0', textAlign: 'center', fontWeight: '900', fontSize: '1.1rem' }}
+                                                />
+                                            </td>
+                                            <td>
+                                                {diff !== 0 && (
+                                                    <span style={{ fontWeight: '900', color: diff > 0 ? 'var(--success)' : 'var(--error)' }}>
+                                                        {diff > 0 ? `+${diff}` : diff}
+                                                    </span>
+                                                )}
+                                                {diff === 0 && <span style={{ opacity: 0.2 }}>-</span>}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                        <div className="card" style={{ background: '#0f172a', color: 'white' }}>
+                            <h4 style={{ color: 'white', fontWeight: '900', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <History size={20} color="var(--primary)" /> Audit des Ajustements
+                            </h4>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '400px', overflowY: 'auto' }}>
+                                {inventoryLog.map(log => (
+                                    <div key={log.id} style={{ padding: '12px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', borderLeft: `4px solid ${log.difference > 0 ? '#10b981' : '#f43f5e'}` }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                                            <span style={{ fontSize: '0.8rem', fontWeight: '800' }}>{log.product}</span>
+                                            <span style={{ fontSize: '0.7rem', opacity: 0.6 }}>{log.date.split(' ')[1]}</span>
+                                        </div>
+                                        <p style={{ fontSize: '0.75rem', color: log.difference > 0 ? '#10b981' : '#f43f5e', fontWeight: '800' }}>
+                                            {log.status} : {log.difference > 0 ? '+' : ''}{log.difference} unités
+                                        </p>
+                                    </div>
+                                ))}
+                                {inventoryLog.length === 0 && (
+                                    <p style={{ textAlign: 'center', fontSize: '0.8rem', opacity: 0.4, padding: '20px' }}>Aucun ajustement récent.</p>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="card" style={{ border: '1px dashed var(--border)' }}>
+                            <h4 style={{ fontWeight: '900', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <Download size={18} /> Rapports d'Inventaire
+                            </h4>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px' }}>
+                                <button className="glass" style={{ width: '100%', padding: '12px', borderRadius: '10px', textAlign: 'left', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer' }}>📄 Export PDF - Écarts de Stock</button>
+                                <button className="glass" style={{ width: '100%', padding: '12px', borderRadius: '10px', textAlign: 'left', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer' }}>📊 Valorisation des Pertes</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <table className="data-table">
-                    <thead>
-                        <tr>
-                            <th style={{ padding: '20px' }}>Produit / Labo</th>
-                            <th>Stock Réel</th>
-                            <th>Réserves</th>
-                            <th>État</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {MOCK_PRODUCTS.slice(0, 10).map(p => {
-                            const activeRes = reservedList.filter(r => r.product.toLowerCase().includes(p.name.toLowerCase()) && r.status === 'active');
-                            const expiredRes = reservedList.filter(r => r.product.toLowerCase().includes(p.name.toLowerCase()) && r.status === 'expired');
-
-                            return (
-                                <tr key={p.id}>
-                                    <td style={{ padding: '18px 20px' }}><div style={{ fontWeight: '700' }}>{p.name}</div><div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{p.labs}</div></td>
-                                    <td><span style={{ fontWeight: '800' }}>{p.stock}</span></td>
-                                    <td>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            {activeRes.length > 0 && <span style={{ padding: '4px 8px', borderRadius: '6px', background: '#f5f3ff', color: '#8b5cf6', fontSize: '0.7rem', fontWeight: '800' }}>{activeRes.length} ACTIVE</span>}
-                                            {expiredRes.length > 0 && <span style={{ padding: '4px 8px', borderRadius: '6px', background: '#fef2f2', color: '#ef4444', fontSize: '0.7rem', fontWeight: '800' }}>{expiredRes.length} EXPIRÉE</span>}
-                                            {activeRes.length === 0 && expiredRes.length === 0 && <span style={{ opacity: 0.3 }}>-</span>}
-                                        </div>
-                                    </td>
-                                    <td><span style={{ padding: '6px 12px', borderRadius: '100px', fontSize: '0.7rem', fontWeight: '800', backgroundColor: p.status === 'Normal' ? '#f0fdf4' : '#fef2f2', color: p.status === 'Normal' ? '#15803d' : '#b91c1c' }}>{p.status.toUpperCase()}</span></td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
-            </div>
+            )}
 
             {/* Modal de Réception (Simulation Logic as before) */}
             {showReceiveModal && (
