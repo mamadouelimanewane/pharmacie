@@ -3,9 +3,10 @@ import {
     ShoppingBag, Search, Menu, X, Star,
     ArrowRight, Heart, Filter, MessageCircle,
     ChevronDown, LayoutGrid, List, Plus, Minus,
-    Zap, Share2, Gift, Send, Copy
+    Zap, Share2, Gift, Send, Copy, BookOpen, Sparkles,
+    BellRing, CheckCircle, AlertCircle
 } from 'lucide-react';
-import { BOUTIQUE_PRODUCTS, BOUTIQUE_CATEGORIES, FLASH_SALE_CONFIG, REFERRAL_PROGRAM } from '../data/boutiqueData';
+import { BOUTIQUE_PRODUCTS, BOUTIQUE_CATEGORIES, FLASH_SALE_CONFIG, REFERRAL_PROGRAM, MOCK_ARTICLES } from '../data/boutiqueData';
 
 export default function Storefront() {
     const [cart, setCart] = useState([]);
@@ -15,6 +16,39 @@ export default function Storefront() {
     const [isAiOpen, setIsAiOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [isReferralOpen, setIsReferralOpen] = useState(false);
+    const [isDiagnosticOpen, setIsDiagnosticOpen] = useState(false);
+    const [diagnosticStep, setDiagnosticStep] = useState(0);
+    const [diagnosticAnswers, setDiagnosticAnswers] = useState({});
+    const [diagnosticComplete, setDiagnosticComplete] = useState(false);
+    const [isMilestoneOpen, setIsMilestoneOpen] = useState(false);
+    const [referralCount, setReferralCount] = useState(2);
+
+    const handleShare = () => {
+        const newCount = referralCount + 1;
+        setReferralCount(newCount);
+        if (newCount >= 3 && referralCount < 3) {
+            setIsReferralOpen(false);
+            setIsMilestoneOpen(true);
+        }
+    };
+
+    const diagnosticQuestions = [
+        {
+            id: 'type',
+            q: "Quel est votre type de peau ?",
+            options: ['Sèche', 'Grasse', 'Mixte', 'Sensible']
+        },
+        {
+            id: 'concern',
+            q: "Votre préoccupation principale ?",
+            options: ['Rides & Fermeté', 'Imperfections', 'Taches & Éclat', 'Hydratation']
+        },
+        {
+            id: 'env',
+            q: "Votre environnement quotidien ?",
+            options: ['Ville / Pollution', 'Exposition Solaire', 'Bureau / Clim', 'Air Sec']
+        }
+    ];
 
     const addToCart = (product) => {
         const existing = cart.find(item => item.id === product.id);
@@ -77,6 +111,12 @@ export default function Storefront() {
                                 {cart.reduce((s, i) => s + i.qty, 0)}
                             </span>
                         )}
+                    </button>
+                    <button
+                        onClick={() => setIsDiagnosticOpen(true)}
+                        style={{ border: 'none', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', color: '#fff', padding: '10px 20px', borderRadius: '100px', fontWeight: '800', cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px' }}
+                    >
+                        <Sparkles size={16} /> Diagnostic Peau IA
                     </button>
                     <button style={{ border: 'none', background: '#000', color: '#fff', padding: '10px 20px', borderRadius: '100px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem' }}>Connexion</button>
                 </div>
@@ -182,6 +222,33 @@ export default function Storefront() {
                 </div>
             </section>
 
+            {/* --- ELITE JOURNAL --- */}
+            <section style={{ padding: '5rem 5%', backgroundColor: '#fcfcfc' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '3rem' }}>
+                    <h2 style={{ fontSize: '2.5rem', fontWeight: '900' }}>Journal de Beauté Elite</h2>
+                    <button style={{ border: 'none', background: 'none', color: '#3b82f6', fontWeight: '800', textDecoration: 'underline', cursor: 'pointer' }}>Voir tous les articles</button>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2rem' }}>
+                    {MOCK_ARTICLES.map(article => (
+                        <div key={article.id} className="article-card" style={{ cursor: 'pointer', backgroundColor: '#fff', borderRadius: '32px', overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.03)', transition: 'transform 0.3s' }}>
+                            <div style={{ height: '250px', overflow: 'hidden' }}>
+                                <img src={article.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            </div>
+                            <div style={{ padding: '1.5rem' }}>
+                                <span style={{ fontSize: '0.75rem', fontWeight: '800', color: '#10b981', textTransform: 'uppercase' }}>{article.category}</span>
+                                <h3 style={{ fontSize: '1.4rem', fontWeight: '900', margin: '10px 0', lineHeight: 1.3 }}>{article.title}</h3>
+                                <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.75rem', fontWeight: '700', color: '#999', marginTop: '1rem' }}>
+                                    <span>{article.date}</span>
+                                    <span>{article.readTime}</span>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            <div style={{ height: '100px' }}></div>
+
             {/* --- FOOTER --- */}
             <footer style={{ backgroundColor: '#000', color: '#fff', padding: '5rem 5%', marginTop: '5rem' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4rem' }}>
@@ -280,16 +347,34 @@ export default function Storefront() {
                                 </div>
                             </div>
 
-                            <div style={{ marginTop: 'auto', display: 'flex', gap: '1.5rem' }}>
-                                <button
-                                    onClick={() => { addToCart(selectedProduct); setSelectedProduct(null); }}
-                                    style={{ flex: 1, padding: '1.5rem', borderRadius: '100px', backgroundColor: '#000', color: '#fff', border: 'none', fontWeight: '900', fontSize: '1.1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}
-                                >
-                                    <ShoppingBag size={24} /> Ajouter au panier
-                                </button>
-                                <button style={{ width: '70px', height: '70px', borderRadius: '50%', border: '1px solid #eee', background: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                                    <Heart size={24} />
-                                </button>
+                            <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                                {selectedProduct.stock > 0 ? (
+                                    <button
+                                        onClick={() => { addToCart(selectedProduct); setSelectedProduct(null); }}
+                                        style={{ width: '100%', padding: '1.5rem', borderRadius: '100px', backgroundColor: '#000', color: '#fff', border: 'none', fontWeight: '900', fontSize: '1.1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}
+                                    >
+                                        <ShoppingBag size={24} /> Ajouter au panier
+                                    </button>
+                                ) : (
+                                    <button
+                                        style={{ width: '100%', padding: '1.5rem', borderRadius: '100px', backgroundColor: '#25d366', color: '#fff', border: 'none', fontWeight: '900', fontSize: '1.1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}
+                                    >
+                                        <BellRing size={24} /> M'alerter sur WhatsApp
+                                    </button>
+                                )}
+
+                                <div style={{ borderTop: '1px solid #eee', paddingTop: '1.5rem' }}>
+                                    <p style={{ fontSize: '0.8rem', fontWeight: '800', textTransform: 'uppercase', color: '#999', marginBottom: '1rem' }}>L'IA Elite Recommande</p>
+                                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center', backgroundColor: '#f0f9ff', padding: '12px', borderRadius: '16px', border: '1px solid #e0f2fe' }}>
+                                        <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <Sparkles size={20} color="#3b82f6" />
+                                        </div>
+                                        <div>
+                                            <p style={{ fontSize: '0.85rem', fontWeight: '800' }}>Complétez avec le Nettoyant Doux</p>
+                                            <p style={{ fontSize: '0.75rem', color: '#3b82f6', fontWeight: '700' }}>Optimisez les résultats de ce soin</p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -333,25 +418,119 @@ export default function Storefront() {
                             <button style={{ border: 'none', background: 'none', color: '#666', cursor: 'pointer' }}><Copy size={20} /></button>
                         </div>
 
+                        <div style={{ marginBottom: '2rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                <span style={{ fontSize: '0.85rem', fontWeight: '800' }}>Votre Progression VIP</span>
+                                <span style={{ fontSize: '0.85rem', fontWeight: '900', color: '#3b82f6' }}>{referralCount}/3 Invites</span>
+                            </div>
+                            <div style={{ width: '100%', height: '8px', backgroundColor: '#f1f5f9', borderRadius: '100px', overflow: 'hidden', marginBottom: '15px' }}>
+                                <div style={{ width: `${Math.min((referralCount / 3) * 100, 100)}%`, height: '100%', background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)', transition: 'width 0.5s cubic-bezier(0.4, 0, 0.2, 1)' }}></div>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', borderRadius: '12px', backgroundColor: '#fff', border: '1px solid #eee' }}>
+                                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🥈</div>
+                                    <div style={{ flex: 1 }}>
+                                        <p style={{ fontSize: '0.75rem', fontWeight: '800' }}>Prochain Palier : Elite Silver</p>
+                                        <p style={{ fontSize: '0.65rem', color: '#666' }}>Récompense : Bon de 15.000 F + Livraison Offerte</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                            <button style={{ width: '100%', padding: '1rem', borderRadius: '100px', backgroundColor: '#25d366', color: '#fff', border: 'none', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', cursor: 'pointer' }}>
+                            <button onClick={handleShare} style={{ width: '100%', padding: '1rem', borderRadius: '100px', backgroundColor: '#25d366', color: '#fff', border: 'none', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', cursor: 'pointer' }}>
                                 <MessageCircle size={20} /> Partager sur WhatsApp
-                            </button>
-                            <button style={{ width: '100%', padding: '1rem', borderRadius: '100px', backgroundColor: '#000', color: '#fff', border: 'none', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', cursor: 'pointer' }}>
-                                <Send size={20} /> Envoyer par Email
                             </button>
                         </div>
                     </div>
                 </div>
             )}
+
+            {/* --- SKIN DIAGNOSTIC MODAL --- */}
+            {isDiagnosticOpen && (
+                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.95)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }} onClick={() => { setIsDiagnosticOpen(false); setDiagnosticStep(0); setDiagnosticComplete(false); }}>
+                    <div className="fade-in" style={{ backgroundColor: '#fff', width: '600px', borderRadius: '40px', padding: '4rem', position: 'relative', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+                        <button onClick={() => { setIsDiagnosticOpen(false); setDiagnosticStep(0); setDiagnosticComplete(false); }} style={{ position: 'absolute', top: '30px', right: '30px', border: 'none', background: 'none', cursor: 'pointer' }}><X size={28} /></button>
+
+                        {!diagnosticComplete ? (
+                            <>
+                                <div style={{ width: '70px', height: '70px', borderRadius: '24px', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', margin: '0 auto 2rem' }}>
+                                    <Sparkles size={35} />
+                                </div>
+                                <h2 style={{ fontSize: '2.1rem', fontWeight: '950', marginBottom: '1rem' }}>Diagnostic Beauté IA</h2>
+                                <p style={{ color: '#666', marginBottom: '3rem' }}>Étape {diagnosticStep + 1} sur 3</p>
+
+                                <div style={{ textAlign: 'left', marginBottom: '3rem' }}>
+                                    <h4 style={{ fontSize: '1.4rem', fontWeight: '800', marginBottom: '25px', textAlign: 'center' }}>{diagnosticQuestions[diagnosticStep].q}</h4>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                        {diagnosticQuestions[diagnosticStep].options.map(opt => (
+                                            <button
+                                                key={opt}
+                                                onClick={() => {
+                                                    if (diagnosticStep < 2) {
+                                                        setDiagnosticStep(diagnosticStep + 1);
+                                                    } else {
+                                                        setDiagnosticComplete(true);
+                                                    }
+                                                }}
+                                                style={{ padding: '20px', borderRadius: '20px', border: '1px solid #eee', background: '#f8fafc', fontWeight: '700', fontSize: '0.95rem', cursor: 'pointer', transition: 'all 0.2s' }}
+                                                onMouseOver={e => e.currentTarget.style.borderColor = '#3b82f6'}
+                                                onMouseOut={e => e.currentTarget.style.borderColor = '#eee'}
+                                            >
+                                                {opt}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div style={{ width: '100%', height: '6px', backgroundColor: '#f0f0f0', borderRadius: '100px', overflow: 'hidden' }}>
+                                    <div style={{ width: `${((diagnosticStep + 1) / 3) * 100}%`, height: '100%', backgroundColor: '#3b82f6', transition: 'width 0.4s' }}></div>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="fade-in">
+                                <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#dcfce7', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 2rem' }}>
+                                    <CheckCircle size={40} />
+                                </div>
+                                <h2 style={{ fontSize: '2.2rem', fontWeight: '950', marginBottom: '1rem' }}>Routine Prête !</h2>
+                                <p style={{ color: '#666', marginBottom: '2.5rem', lineHeight: 1.6 }}>Basé sur vos réponses, nos pharmaciens recommandent la gamme **Lierac Elite Hydratant** combinée avec une protection solaire SPF50+.</p>
+                                <button
+                                    onClick={() => { setIsDiagnosticOpen(false); setDiagnosticStep(0); setDiagnosticComplete(false); }}
+                                    style={{ width: '100%', padding: '1.5rem', borderRadius: '100px', backgroundColor: '#000', color: '#fff', border: 'none', fontWeight: '900', fontSize: '1.1rem', cursor: 'pointer' }}
+                                >
+                                    Voir ma sélection personnalisée
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+            {/* --- MILESTONE CELEBRATION --- */}
+            {isMilestoneOpen && (
+                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 4000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+                    <div className="fade-in" style={{ backgroundColor: '#fff', width: '500px', borderRadius: '40px', padding: '4rem', position: 'relative', textAlign: 'center', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+                        <div style={{ fontSize: '5rem', marginBottom: '1.5rem' }}>🥈</div>
+                        <h2 style={{ fontSize: '2.5rem', fontWeight: '950', marginBottom: '1rem', background: 'linear-gradient(135deg, #64748b, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Félicitations !</h2>
+                        <h3 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '1.5rem' }}>Niveau Elite Silver Atteint</h3>
+                        <p style={{ color: '#666', lineHeight: 1.6, marginBottom: '2.5rem' }}>
+                            Vous avez débloqué vos privilèges Silver ! Un bon de **15.000 F** a été ajouté à votre compte et vous bénéficiez désormais de la **livraison gratuite à vie**.
+                        </p>
+                        <button
+                            onClick={() => setIsMilestoneOpen(false)}
+                            style={{ width: '100%', padding: '1.5rem', borderRadius: '100px', backgroundColor: '#000', color: '#fff', border: 'none', fontWeight: '900', fontSize: '1.1rem', cursor: 'pointer' }}
+                        >
+                            Profiter de mes avantages
+                        </button>
+                    </div>
+                </div>
+            )}
             <style>{`
-                .fade-in-right { animation: fadeInRight 0.4s ease-out; }
-                @keyframes fadeInRight { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
-                .product-card:hover .p-img { transform: scale(1.05); }
-                .product-card:hover .p-overlay { opacity: 1; transform: translateY(0); }
-                .p-overlay { opacity: 0; transform: translateY(10px); transition: all 0.3s; }
+            .fade-in-right {animation: fadeInRight 0.4s ease-out; }
+            @keyframes fadeInRight {from {opacity: 0; transform: translateX(50px); } to {opacity: 1; transform: translateX(0); } }
+            .product-card:hover .p-img {transform: scale(1.05); }
+            .product-card:hover .p-overlay {opacity: 1; transform: translateY(0); }
+            .p-overlay {opacity: 0; transform: translateY(10px); transition: all 0.3s; }
             `}</style>
-        </div>
+        </div >
     );
 }
 
