@@ -4,7 +4,7 @@ import {
   FileText, Settings, Activity, Smartphone, Cpu,
   Brain, Shield, Thermometer, Radio, Heart,
   Globe, ShoppingBag, PieChart, Menu, X, ChevronRight,
-  LogOut, UserCircle
+  LogOut, UserCircle, Lock, GraduationCap // Added Lock and GraduationCap
 } from 'lucide-react';
 
 // Structure hiérarchisée des menus
@@ -14,6 +14,7 @@ const MENU_SECTIONS = [
     items: [
       { id: 'pos', label: 'Point de Vente (POS)', icon: ShoppingCart },
       { id: 'prescriptions', label: 'Ordonnances & Prépa', icon: FileText },
+      { id: 'loyalty', label: 'Fidélité & Marketing', icon: Heart }, // Nouveau
       { id: 'ecommerce', label: 'Click & Collect', icon: Smartphone },
       { id: 'mutuelles', label: 'Tiers-Payant & Factu.', icon: Shield },
     ]
@@ -23,7 +24,9 @@ const MENU_SECTIONS = [
     items: [
       { id: 'dashboard', label: 'Vue d\'Ensemble', icon: LayoutDashboard },
       { id: 'inventory', label: 'Stocks & Logistique', icon: Package },
+      { id: 'compliance', label: 'Conformité & Police', icon: Lock }, // Nouveau
       { id: 'staff', label: 'Planning & RH', icon: Users },
+      { id: 'academy', label: 'Pharma Academy', icon: GraduationCap }, // Nouveau
       { id: 'finances', label: 'Reporting Financier', icon: Activity },
     ]
   },
