@@ -14,7 +14,8 @@ const MENU_SECTIONS = [
     items: [
       { id: 'pos', label: 'Point de Vente (POS)', icon: ShoppingCart },
       { id: 'prescriptions', label: 'Ordonnances & Prépa', icon: FileText },
-      { id: 'loyalty', label: 'Fidélité & Marketing', icon: Heart }, // Nouveau
+      { id: 'community', label: 'Solidarité Africa', icon: Globe }, // Nouveau
+      { id: 'loyalty', label: 'Fidélité & Marketing', icon: Heart },
       { id: 'ecommerce', label: 'Click & Collect', icon: Smartphone },
       { id: 'mutuelles', label: 'Tiers-Payant & Factu.', icon: Shield },
     ]

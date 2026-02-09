@@ -15,6 +15,7 @@ import Mutuelles from './components/Mutuelles'; // Tiers-Payant
 import SanitaryIoT from './components/SanitaryIoT'; // Sécurité Sanitaire IoT (changed from SanitarySecurity)
 import BoutiqueBackoffice from './boutique/BoutiqueBackoffice'; // Manager Boutique
 import MobileManager from './components/MobileManager'; // Vue Mobile Gérant
+import CommunityHealth from './components/CommunityHealth'; // New
 import LoyaltyMarketing from './components/LoyaltyMarketing'; // New
 import Compliance from './components/Compliance'; // New
 import PharmaAcademy from './components/PharmaAcademy'; // New
@@ -35,6 +36,8 @@ function App() {
         return <Mutuelles />;
       case 'loyalty': // New
         return <LoyaltyMarketing />;
+      case 'community': // New
+        return <CommunityHealth />;
 
       // PÔLE GESTION
       case 'dashboard':
