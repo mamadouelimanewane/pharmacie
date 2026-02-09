@@ -47,7 +47,14 @@ const MENU_SECTIONS = [
 ];
 
 export default function Sidebar({ activeTab, setActiveTab }) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(window.innerWidth < 768);
+
+  const handleItemClick = (id) => {
+    setActiveTab(id);
+    if (window.innerWidth < 768) {
+      setCollapsed(true);
+    }
+  };
 
   return (
     <div className="sidebar" style={{
@@ -119,7 +126,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                 return (
                   <li key={item.id}>
                     <button
-                      onClick={() => setActiveTab(item.id)}
+                      onClick={() => handleItemClick(item.id)}
                       title={collapsed ? item.label : ''}
                       style={{
                         width: '100%',
