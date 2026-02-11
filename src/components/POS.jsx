@@ -981,20 +981,21 @@ export default function POS() {
                             </div>
                         </div>
                     </div>
+                </div>
             )}
-                    {/* Template Ticket Thermique (Masqué à l'écran, visible à l'impression) */}
-                    <div id="thermal-receipt" style={{ display: 'none' }}>
-                        <div style={{ width: '80mm', padding: '10mm', fontFamily: 'monospace', color: 'black', backgroundColor: 'white' }}>
-                            <div style={{ textAlign: 'center', marginBottom: '10px' }}>
-                                <h2 style={{ margin: 0 }}>PHARMACIE ELITE</h2>
-                                <p style={{ margin: 0, fontSize: '13px', fontWeight: 'bold' }}>*** TICKET DE CAISSE ***</p>
-                                <p style={{ margin: 0, fontSize: '12px' }}>Dakar, Liberté 6</p>
-                                <p style={{ margin: 0, fontSize: '12px' }}>Tel: +221 33 800 00 00</p>
-                            </div>
-                        </div>
+            {/* Template Ticket Thermique (Masqué à l'écran, visible à l'impression) */}
+            <div id="thermal-receipt" style={{ display: 'none' }}>
+                <div style={{ width: '80mm', padding: '10mm', fontFamily: 'monospace', color: 'black', backgroundColor: 'white' }}>
+                    <div style={{ textAlign: 'center', marginBottom: '10px' }}>
+                        <h2 style={{ margin: 0 }}>PHARMACIE ELITE</h2>
+                        <p style={{ margin: 0, fontSize: '13px', fontWeight: 'bold' }}>*** TICKET DE CAISSE ***</p>
+                        <p style={{ margin: 0, fontSize: '12px' }}>Dakar, Liberté 6</p>
+                        <p style={{ margin: 0, fontSize: '12px' }}>Tel: +221 33 800 00 00</p>
                     </div>
+                </div>
+            </div>
 
-                    <style>{` 
+            <style>{` 
                 @keyframes scanMove { 0% { top: 0; } 50% { top: 100%; } 100% { top: 0; } } 
                 * { -webkit-tap-highlight-color: transparent; }
                 button { touch-action: manipulation; }
@@ -1004,6 +1005,6 @@ export default function POS() {
                     #thermal-receipt { display: block !important; position: fixed; top: 0; left: 0; width: 80mm; }
                 }
             `}</style>
-                </div>
-            );
+        </div>
+    );
 }
