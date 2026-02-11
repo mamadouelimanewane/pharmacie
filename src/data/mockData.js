@@ -11,6 +11,14 @@ export const MOCK_PRODUCTS = [
     { id: 10, name: 'Magné B6', category: 'Complément', stock: 120, minStock: 40, price: 7500, costPrice: 4200, status: 'Normal', code: '3400930010', location: 'C-02', labs: 'Sanofi', expiry: '2027-03-12' }
 ];
 
+export const TOP_PRODUCTS = [
+    { id: 1, name: 'Doliprane 1000mg', sales: 145, trend: 'up' },
+    { id: 2, name: 'Efferalgan Vit C', sales: 98, trend: 'stable' },
+    { id: 3, name: 'Spasfon Lyoc', sales: 76, trend: 'up' },
+    { id: 4, name: 'Amoxicilline 1g', sales: 65, trend: 'down' },
+    { id: 5, name: 'Humex Rhume', sales: 54, trend: 'up' },
+];
+
 export const MOCK_PATIENTS = [
     { id: 1, name: 'Abdoulaye Diop', dob: '12/05/1965', nss: '1 65 05 99 001 002 45', phone: '77 634 56 78', lastVisit: '02/02/2026', risk: 'None', email: 'a.diop@email.sn', mutuelle: 'IPM Dakar' },
     { id: 2, name: 'Fatou Sow', dob: '07/11/1984', nss: '2 84 11 99 001 003 12', phone: '78 123 54 32', lastVisit: '05/02/2026', risk: 'Allergie Pénicilline', email: 'fatou.sow@orange.sn', mutuelle: 'AXA Sénégal' },
@@ -39,4 +47,19 @@ export const MOCK_STAFF = [
     { id: 2, name: 'Aminata Diallo', role: 'Préparatrice', status: 'Présente', shift: '09:00 - 17:00', initials: 'AD' },
     { id: 3, name: 'Cheikh Tidiane Sy', role: 'Apprenti', status: 'Absent', shift: 'Repos', reason: 'Formation', initials: 'CS' },
     { id: 4, name: 'Dr. Ramatoulaye Faye', role: 'Pharmacien Adjoint', status: 'Présente', shift: '12:00 - 20:00', initials: 'RF' }
+];
+
+export const RECENT_TRANSACTIONS = [
+    { id: 'T-10023', time: '10:42', type: 'Vente', amount: '12,500', method: 'Espèces', items: ['Doliprane', 'Vogalène'] },
+    { id: 'T-10024', time: '10:55', type: 'Vente', amount: '8,200', method: 'Orange Money', items: ['Gaviscon'] },
+    { id: 'T-10025', time: '11:15', type: 'Vente', amount: '45,000', method: 'Carte Bancaire', items: ['Insuline Lantus'] },
+    { id: 'T-10026', time: '11:30', type: 'Vente', amount: '22,100', method: 'Wave', items: ['Bétadine', 'Compresses'] },
+    { id: 'T-DIAS-01', time: '11:45', type: 'Diaspora', amount: '65,000', method: 'DiasPharma 🌍', items: ['Ordonnance Maman Fatou (Paris)'] },
+    { id: 'T-TONT-08', time: '12:10', type: 'Assurance', amount: '32,500', method: 'TontineCare 🤝', items: ['Urgence Palu (Calebasse Liberté)'] },
+];
+
+export const LOW_STOCK_ALERTS = [
+    { id: 1, name: 'Ventoline Inhalateur', current: 3, min: 10 },
+    { id: 2, name: 'Doliprane Sirop', current: 5, min: 15 },
+    { id: 3, name: 'Augmentin Enfant', current: 2, min: 8 },
 ];
